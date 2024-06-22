@@ -1,6 +1,6 @@
 name: iso_base_media
 description: A dart package to parse ISO Base Media File Format and MP4 files.
-version: 1.0.0
+version: 1.1.0
 repository: https://github.com/mgenware/iso_base_media
 
 environment:
