@@ -236,4 +236,65 @@ void main() {
       ]
     ]);
   });
+
+  test('HEIC', () async {
+    final list = <Object>[];
+    final fileBox = await ISOFileBox.open('./test/test_files/a.heic');
+    await inspectISOBox(fileBox, callback: (box, depth) {
+      final dict = box.toDict();
+      dict['depth'] = depth;
+      list.add(dict);
+    });
+    expect(list, [
+      {'boxSize': 24, 'dataSize': 16, 'type': 'ftyp', 'depth': 1},
+      {
+        'boxSize': 510,
+        'dataSize': 498,
+        'type': 'meta',
+        'fullBoxData': 0,
+        'depth': 1
+      },
+      {
+        'boxSize': 33,
+        'dataSize': 21,
+        'type': 'hdlr',
+        'fullBoxData': 0,
+        'depth': 2
+      },
+      {
+        'boxSize': 14,
+        'dataSize': 2,
+        'type': 'pitm',
+        'fullBoxData': 0,
+        'depth': 2
+      },
+      {
+        'boxSize': 52,
+        'dataSize': 40,
+        'type': 'iloc',
+        'fullBoxData': 0,
+        'depth': 2
+      },
+      {
+        'boxSize': 76,
+        'dataSize': 64,
+        'type': 'iinf',
+        'fullBoxData': 0,
+        'depth': 2
+      },
+      {
+        'boxSize': 26,
+        'dataSize': 14,
+        'type': 'iref',
+        'fullBoxData': 0,
+        'depth': 2
+      },
+      {'boxSize': 14, 'dataSize': 6, 'type': 'thmb', 'depth': 3},
+      {'boxSize': 297, 'dataSize': 289, 'type': 'iprp', 'depth': 2},
+      {'boxSize': 263, 'dataSize': 255, 'type': 'ipco', 'depth': 3},
+      {'boxSize': 26, 'dataSize': 18, 'type': 'ipma', 'depth': 3},
+      {'boxSize': 293074, 'dataSize': 293066, 'type': 'mdat', 'depth': 1}
+    ]);
+    await fileBox.close();
+  });
 }

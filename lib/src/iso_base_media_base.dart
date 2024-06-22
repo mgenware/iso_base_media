@@ -1,4 +1,6 @@
+import 'dart:async';
 import 'dart:io';
+import 'dart:typed_data';
 
 const _containerBoxes = {
   'moov',
@@ -12,7 +14,8 @@ const _containerBoxes = {
   'mvex',
   'meta',
   'iref',
-  'iprp'
+  'iprp',
+  'ipco'
 };
 
 const _fullBoxes = {
@@ -141,13 +144,14 @@ class ISOBox implements ISOBoxBase {
   /// The size of the box.
   final int boxSize;
 
-  /// The size of the data in the box.
-  int get dataSize =>
-      boxSize -
+  int get headerSize =>
       // 8 bytes for header size.
-      8 -
+      8 +
       // 4 bytes for full box data.
       (fullBoxData != null ? 4 : 0);
+
+  /// The size of the data in the box.
+  int get dataSize => boxSize - headerSize;
 
   /// The type of the box.
   final String type;
@@ -161,12 +165,12 @@ class ISOBox implements ISOBoxBase {
   /// The full box data.
   final int? fullBoxData;
 
-  final int _initialOffset;
+  final int _dataOffset;
   late int _currentOffset;
 
   ISOBox(this.boxSize, this.type, this.isContainer, this._file,
-      this._initialOffset, this.fullBoxData) {
-    _currentOffset = _initialOffset;
+      this._dataOffset, this.fullBoxData) {
+    _currentOffset = _dataOffset;
   }
 
   @override
@@ -174,7 +178,7 @@ class ISOBox implements ISOBoxBase {
     if (!_containerBoxes.contains(type)) {
       return null;
     }
-    if (_currentOffset - _initialOffset >= dataSize) {
+    if (_currentOffset - _dataOffset >= dataSize) {
       return null;
     }
     await _file.setPosition(_currentOffset);
@@ -199,6 +203,11 @@ class ISOBox implements ISOBoxBase {
     }
     return res;
   }
+
+  Future<Uint8List> extractData() async {
+    await _file.setPosition(_dataOffset);
+    return await _file.read(dataSize);
+  }
 }
 
 /// Can be used to read ISO boxes from a file.
@@ -212,7 +221,7 @@ class ISOFileBox implements ISOBoxBase {
 
   /// Opens a file and returns an instance of [ISOFileBox].
   static Future<ISOFileBox> open(String filePath) async {
-    RandomAccessFile raf = await File(filePath).open();
+    final raf = await File(filePath).open();
     return ISOFileBox._(filePath, raf);
   }
 
@@ -230,10 +239,18 @@ class ISOFileBox implements ISOBoxBase {
   }
 }
 
-Future<List<Object>> _inspectISOBox(ISOBoxBase box, int depth) async {
+Future<List<Object>> _inspectISOBox(
+  ISOBoxBase box,
+  int depth, {
+  FutureOr<void> Function(ISOBox box, int depth)? callback,
+}) async {
   final res = <Object>[];
   if (box is ISOBox) {
-    res.add(box.toDict());
+    if (callback != null) {
+      await callback(box, depth);
+    } else {
+      res.add(box.toDict());
+    }
     if (!box.isContainer) {
       return res;
     }
@@ -242,13 +259,22 @@ Future<List<Object>> _inspectISOBox(ISOBoxBase box, int depth) async {
   do {
     child = await box.nextChild();
     if (child != null) {
-      res.add(await _inspectISOBox(child, depth + 1));
+      final childInspection =
+          await _inspectISOBox(child, depth + 1, callback: callback);
+      if (callback == null) {
+        res.add(childInspection);
+      }
     }
   } while (child != null);
   return res;
 }
 
 /// Inspects an ISO box.
-Future<List<Object>> inspectISOBox(ISOBoxBase box) async {
-  return _inspectISOBox(box, 0);
+/// Returns all child boxes in a tree structure. If [callback] is not null,
+/// it will return an empty list.
+Future<List<Object>> inspectISOBox(
+  ISOBoxBase box, {
+  FutureOr<void> Function(ISOBox box, int depth)? callback,
+}) async {
+  return _inspectISOBox(box, 0, callback: callback);
 }
