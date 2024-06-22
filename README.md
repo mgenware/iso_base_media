@@ -5,55 +5,85 @@
 
 ## Usage
 
+### Inspect all boxes (atoms) in an ISO base media format file
+
 ```dart
-import 'package:iso_base_media/iso_base_media.dart';
-
-void main() async {
+Future<void> inspect() async {
   final fileBox = await ISOFileBox.open('./test/test_files/a.heic');
-  final description = await inspectISOBox(fileBox);
+  final s = await inspectISOBox(fileBox);
   await fileBox.close();
-  print(description);
-
-  /*
+  print(s);
+}
+/*
+  [
     [
+      {'boxSize': 24, 'dataSize': 16, 'type': 'ftyp'}
+    ],
+    [
+      {'boxSize': 510, 'dataSize': 498, 'type': 'meta', 'fullBoxData': 0},
       [
-        {'boxSize': 24, 'dataSize': 16, 'type': 'ftyp'}
+        {'boxSize': 33, 'dataSize': 21, 'type': 'hdlr', 'fullBoxData': 0}
       ],
       [
-        {'boxSize': 510, 'dataSize': 498, 'type': 'meta', 'fullBoxData': 0},
+        {'boxSize': 14, 'dataSize': 2, 'type': 'pitm', 'fullBoxData': 0}
+      ],
+      [
+        {'boxSize': 52, 'dataSize': 40, 'type': 'iloc', 'fullBoxData': 0}
+      ],
+      [
+        {'boxSize': 76, 'dataSize': 64, 'type': 'iinf', 'fullBoxData': 0}
+      ],
+      [
+        {'boxSize': 26, 'dataSize': 14, 'type': 'iref', 'fullBoxData': 0},
         [
-          {'boxSize': 33, 'dataSize': 21, 'type': 'hdlr', 'fullBoxData': 0}
-        ],
-        [
-          {'boxSize': 14, 'dataSize': 2, 'type': 'pitm', 'fullBoxData': 0}
-        ],
-        [
-          {'boxSize': 52, 'dataSize': 40, 'type': 'iloc', 'fullBoxData': 0}
-        ],
-        [
-          {'boxSize': 76, 'dataSize': 64, 'type': 'iinf', 'fullBoxData': 0}
-        ],
-        [
-          {'boxSize': 26, 'dataSize': 14, 'type': 'iref', 'fullBoxData': 0},
-          [
-            {'boxSize': 14, 'dataSize': 6, 'type': 'thmb'}
-          ]
-        ],
-        [
-          {'boxSize': 297, 'dataSize': 289, 'type': 'iprp'},
-          [
-            {'boxSize': 263, 'dataSize': 255, 'type': 'ipco'}
-          ],
-          [
-            {'boxSize': 26, 'dataSize': 18, 'type': 'ipma'}
-          ]
+          {'boxSize': 14, 'dataSize': 6, 'type': 'thmb'}
         ]
       ],
       [
-        {'boxSize': 293074, 'dataSize': 293066, 'type': 'mdat'}
+        {'boxSize': 297, 'dataSize': 289, 'type': 'iprp'},
+        [
+          {'boxSize': 263, 'dataSize': 255, 'type': 'ipco'}
+        ],
+        [
+          {'boxSize': 26, 'dataSize': 18, 'type': 'ipma'}
+        ]
       ]
+    ],
+    [
+      {'boxSize': 293074, 'dataSize': 293066, 'type': 'mdat'}
     ]
-  */
+  ]
+*/
+```
+
+### Extract data from specific boxes
+
+```dart
+Future<void> extract() async {
+  final fileBox = await ISOFileBox.open('./test/test_files/a.heic');
+  var s = '';
+  await inspectISOBox(fileBox, callback: (box, depth) async {
+    if (box.type == 'ispe') {
+      final data = await box.extractData();
+      s += '${uint8ListToHex(data)}\n';
+    }
+  });
+  await fileBox.close();
+  print(s);
 }
 
+String uint8ListToHex(Uint8List bytes) {
+  final StringBuffer buffer = StringBuffer();
+  buffer.write('bytes(${bytes.length}): ');
+  for (int byte in bytes) {
+    buffer.write(byte.toRadixString(16).padLeft(2, '0'));
+    buffer.write(' ');
+  }
+  return buffer.toString();
+}
+
+/*
+bytes(12): 00 00 00 00 00 00 05 a0 00 00 03 c0
+bytes(12): 00 00 00 00 00 00 00 f0 00 00 00 a0
+*/
 ```

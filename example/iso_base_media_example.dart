@@ -6,8 +6,9 @@ import 'package:iso_base_media/iso_base_media.dart';
 
 Future<void> inspect() async {
   final fileBox = await ISOFileBox.open('./test/test_files/a.heic');
-  await inspectISOBox(fileBox);
+  final s = await inspectISOBox(fileBox);
   await fileBox.close();
+  print(s);
 }
 
 Future<void> extract() async {
@@ -19,8 +20,8 @@ Future<void> extract() async {
       s += '${uint8ListToHex(data)}\n';
     }
   });
-  print(s);
   await fileBox.close();
+  print(s);
 }
 
 String uint8ListToHex(Uint8List bytes) {
@@ -35,5 +36,6 @@ String uint8ListToHex(Uint8List bytes) {
 
 void main() async {
   await inspect();
+  print('-----------------------');
   await extract();
 }
