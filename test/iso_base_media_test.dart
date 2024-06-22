@@ -1,3 +1,5 @@
+import 'dart:typed_data';
+
 import 'package:iso_base_media/iso_base_media.dart';
 import 'package:test/test.dart';
 
@@ -6,6 +8,16 @@ Future<void> testFile(String fileName, List<Object> expected) async {
   final actual = await inspectISOBox(fileBox);
   expect(actual, expected);
   await fileBox.close();
+}
+
+String uint8ListToHex(Uint8List bytes) {
+  final StringBuffer buffer = StringBuffer();
+  buffer.write('bytes(${bytes.length}): ');
+  for (int byte in bytes) {
+    buffer.write(byte.toRadixString(16).padLeft(2, '0'));
+    buffer.write(' ');
+  }
+  return buffer.toString();
 }
 
 void main() {
@@ -224,7 +236,19 @@ void main() {
         [
           {'boxSize': 297, 'dataSize': 289, 'type': 'iprp'},
           [
-            {'boxSize': 263, 'dataSize': 255, 'type': 'ipco'}
+            {'boxSize': 263, 'dataSize': 255, 'type': 'ipco'},
+            [
+              {'boxSize': 108, 'dataSize': 100, 'type': 'hvcC'}
+            ],
+            [
+              {'boxSize': 20, 'dataSize': 12, 'type': 'ispe'}
+            ],
+            [
+              {'boxSize': 107, 'dataSize': 99, 'type': 'hvcC'}
+            ],
+            [
+              {'boxSize': 20, 'dataSize': 12, 'type': 'ispe'}
+            ]
           ],
           [
             {'boxSize': 26, 'dataSize': 18, 'type': 'ipma'}
@@ -237,7 +261,7 @@ void main() {
     ]);
   });
 
-  test('HEIC', () async {
+  test('Callback', () async {
     final list = <Object>[];
     final fileBox = await ISOFileBox.open('./test/test_files/a.heic');
     await inspectISOBox(fileBox, callback: (box, depth) {
@@ -292,9 +316,27 @@ void main() {
       {'boxSize': 14, 'dataSize': 6, 'type': 'thmb', 'depth': 3},
       {'boxSize': 297, 'dataSize': 289, 'type': 'iprp', 'depth': 2},
       {'boxSize': 263, 'dataSize': 255, 'type': 'ipco', 'depth': 3},
+      {'boxSize': 108, 'dataSize': 100, 'type': 'hvcC', 'depth': 4},
+      {'boxSize': 20, 'dataSize': 12, 'type': 'ispe', 'depth': 4},
+      {'boxSize': 107, 'dataSize': 99, 'type': 'hvcC', 'depth': 4},
+      {'boxSize': 20, 'dataSize': 12, 'type': 'ispe', 'depth': 4},
       {'boxSize': 26, 'dataSize': 18, 'type': 'ipma', 'depth': 3},
       {'boxSize': 293074, 'dataSize': 293066, 'type': 'mdat', 'depth': 1}
     ]);
     await fileBox.close();
+  });
+
+  test('Extract data', () async {
+    final fileBox = await ISOFileBox.open('./test/test_files/a.heic');
+    var s = '';
+    await inspectISOBox(fileBox, callback: (box, depth) async {
+      if (box.type == 'ispe') {
+        final data = await box.extractData();
+        s += '${uint8ListToHex(data)}|';
+      }
+    });
+    await fileBox.close();
+    expect(s,
+        'bytes(12): 00 00 00 00 00 00 05 a0 00 00 03 c0 |bytes(12): 00 00 00 00 00 00 00 f0 00 00 00 a0 |');
   });
 }
