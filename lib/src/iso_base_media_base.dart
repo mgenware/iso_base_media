@@ -15,7 +15,7 @@ const _containerBoxes = {
   'meta',
   'iref',
   'iprp',
-  'ipco'
+  'ipco',
 };
 
 const _fullBoxes = {
@@ -117,17 +117,17 @@ Future<ISOBox?> _readChildBox(RandomAccessFile file) async {
   final fullBox = _fullBoxes.contains(type);
   final isContainer = _containerBoxes.contains(type);
 
-  int? fullBoxData;
+  int? fullBoxInt32;
   if (fullBox) {
-    final fullBoxDataBuffer = await file.read(4);
-    if (fullBoxDataBuffer.length < 4) {
+    final fullBoxInt32Buffer = await file.read(4);
+    if (fullBoxInt32Buffer.length < 4) {
       return null;
     }
-    fullBoxData = fullBoxDataBuffer.buffer.asByteData().getUint32(0);
+    fullBoxInt32 = fullBoxInt32Buffer.buffer.asByteData().getUint32(0);
   }
 
   final dataPoz = await file.position();
-  final box = ISOBox(boxSize, type, isContainer, file, dataPoz, fullBoxData);
+  final box = ISOBox(boxSize, type, isContainer, file, dataPoz, fullBoxInt32);
 
   await file.setPosition(dataPoz + box.dataSize);
   return box;
@@ -148,7 +148,7 @@ class ISOBox implements ISOBoxBase {
       // 8 bytes for header size.
       8 +
       // 4 bytes for full box data.
-      (fullBoxData != null ? 4 : 0);
+      (fullBoxInt32 != null ? 4 : 0);
 
   /// The size of the data in the box.
   int get dataSize => boxSize - headerSize;
@@ -163,13 +163,19 @@ class ISOBox implements ISOBoxBase {
   final bool isContainer;
 
   /// The full box data.
-  final int? fullBoxData;
+  final int? fullBoxInt32;
 
   final int _dataOffset;
   late int _currentOffset;
 
-  ISOBox(this.boxSize, this.type, this.isContainer, this._file,
-      this._dataOffset, this.fullBoxData) {
+  ISOBox(
+    this.boxSize,
+    this.type,
+    this.isContainer,
+    this._file,
+    this._dataOffset,
+    this.fullBoxInt32,
+  ) {
     _currentOffset = _dataOffset;
   }
 
@@ -198,8 +204,8 @@ class ISOBox implements ISOBoxBase {
       'dataSize': dataSize,
       'type': type,
     };
-    if (fullBoxData != null) {
-      res['fullBoxData'] = fullBoxData;
+    if (fullBoxInt32 != null) {
+      res['fullBoxInt32'] = fullBoxInt32;
     }
     return res;
   }

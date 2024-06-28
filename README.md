@@ -20,21 +20,21 @@ Future<void> inspect() async {
       {'boxSize': 24, 'dataSize': 16, 'type': 'ftyp'}
     ],
     [
-      {'boxSize': 510, 'dataSize': 498, 'type': 'meta', 'fullBoxData': 0},
+      {'boxSize': 510, 'dataSize': 498, 'type': 'meta', 'fullBoxInt32': 0},
       [
-        {'boxSize': 33, 'dataSize': 21, 'type': 'hdlr', 'fullBoxData': 0}
+        {'boxSize': 33, 'dataSize': 21, 'type': 'hdlr', 'fullBoxInt32': 0}
       ],
       [
-        {'boxSize': 14, 'dataSize': 2, 'type': 'pitm', 'fullBoxData': 0}
+        {'boxSize': 14, 'dataSize': 2, 'type': 'pitm', 'fullBoxInt32': 0}
       ],
       [
-        {'boxSize': 52, 'dataSize': 40, 'type': 'iloc', 'fullBoxData': 0}
+        {'boxSize': 52, 'dataSize': 40, 'type': 'iloc', 'fullBoxInt32': 0}
       ],
       [
-        {'boxSize': 76, 'dataSize': 64, 'type': 'iinf', 'fullBoxData': 0}
+        {'boxSize': 76, 'dataSize': 64, 'type': 'iinf', 'fullBoxInt32': 0}
       ],
       [
-        {'boxSize': 26, 'dataSize': 14, 'type': 'iref', 'fullBoxData': 0},
+        {'boxSize': 26, 'dataSize': 14, 'type': 'iref', 'fullBoxInt32': 0},
         [
           {'boxSize': 14, 'dataSize': 6, 'type': 'thmb'}
         ]

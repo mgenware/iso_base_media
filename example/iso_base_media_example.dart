@@ -27,7 +27,7 @@ Future<void> extract() async {
 String uint8ListToHex(Uint8List bytes) {
   final StringBuffer buffer = StringBuffer();
   buffer.write('bytes(${bytes.length}): ');
-  for (int byte in bytes) {
+  for (final byte in bytes) {
     buffer.write(byte.toRadixString(16).padLeft(2, '0'));
     buffer.write(' ');
   }

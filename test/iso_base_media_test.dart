@@ -13,7 +13,7 @@ Future<void> testFile(String fileName, List<Object> expected) async {
 String uint8ListToHex(Uint8List bytes) {
   final StringBuffer buffer = StringBuffer();
   buffer.write('bytes(${bytes.length}): ');
-  for (int byte in bytes) {
+  for (final byte in bytes) {
     buffer.write(byte.toRadixString(16).padLeft(2, '0'));
     buffer.write(' ');
   }
@@ -35,20 +35,20 @@ void main() {
       [
         {'boxSize': 9718, 'dataSize': 9710, 'type': 'moov'},
         [
-          {'boxSize': 108, 'dataSize': 96, 'type': 'mvhd', 'fullBoxData': 0}
+          {'boxSize': 108, 'dataSize': 96, 'type': 'mvhd', 'fullBoxInt32': 0}
         ],
         [
           {'boxSize': 6083, 'dataSize': 6075, 'type': 'trak'},
           [
-            {'boxSize': 92, 'dataSize': 80, 'type': 'tkhd', 'fullBoxData': 7}
+            {'boxSize': 92, 'dataSize': 80, 'type': 'tkhd', 'fullBoxInt32': 7}
           ],
           [
             {'boxSize': 5983, 'dataSize': 5975, 'type': 'mdia'},
             [
-              {'boxSize': 32, 'dataSize': 20, 'type': 'mdhd', 'fullBoxData': 0}
+              {'boxSize': 32, 'dataSize': 20, 'type': 'mdhd', 'fullBoxInt32': 0}
             ],
             [
-              {'boxSize': 36, 'dataSize': 24, 'type': 'hdlr', 'fullBoxData': 0}
+              {'boxSize': 36, 'dataSize': 24, 'type': 'hdlr', 'fullBoxInt32': 0}
             ],
             [
               {'boxSize': 5907, 'dataSize': 5899, 'type': 'minf'},
@@ -62,7 +62,7 @@ void main() {
                     'boxSize': 28,
                     'dataSize': 16,
                     'type': 'dref',
-                    'fullBoxData': 0
+                    'fullBoxInt32': 0
                   }
                 ]
               ],
@@ -73,7 +73,7 @@ void main() {
                     'boxSize': 91,
                     'dataSize': 79,
                     'type': 'stsd',
-                    'fullBoxData': 0
+                    'fullBoxInt32': 0
                   }
                 ],
                 [
@@ -81,7 +81,7 @@ void main() {
                     'boxSize': 24,
                     'dataSize': 12,
                     'type': 'stts',
-                    'fullBoxData': 0
+                    'fullBoxInt32': 0
                   }
                 ],
                 [
@@ -92,7 +92,7 @@ void main() {
                     'boxSize': 2284,
                     'dataSize': 2272,
                     'type': 'stsc',
-                    'fullBoxData': 0
+                    'fullBoxInt32': 0
                   }
                 ],
                 [
@@ -100,7 +100,7 @@ void main() {
                     'boxSize': 1900,
                     'dataSize': 1888,
                     'type': 'stsz',
-                    'fullBoxData': 0
+                    'fullBoxInt32': 0
                   }
                 ],
                 [
@@ -108,7 +108,7 @@ void main() {
                     'boxSize': 1516,
                     'dataSize': 1504,
                     'type': 'stco',
-                    'fullBoxData': 0
+                    'fullBoxInt32': 0
                   }
                 ]
               ]
@@ -118,15 +118,15 @@ void main() {
         [
           {'boxSize': 3519, 'dataSize': 3511, 'type': 'trak'},
           [
-            {'boxSize': 92, 'dataSize': 80, 'type': 'tkhd', 'fullBoxData': 7}
+            {'boxSize': 92, 'dataSize': 80, 'type': 'tkhd', 'fullBoxInt32': 7}
           ],
           [
             {'boxSize': 3419, 'dataSize': 3411, 'type': 'mdia'},
             [
-              {'boxSize': 32, 'dataSize': 20, 'type': 'mdhd', 'fullBoxData': 0}
+              {'boxSize': 32, 'dataSize': 20, 'type': 'mdhd', 'fullBoxInt32': 0}
             ],
             [
-              {'boxSize': 36, 'dataSize': 24, 'type': 'hdlr', 'fullBoxData': 0}
+              {'boxSize': 36, 'dataSize': 24, 'type': 'hdlr', 'fullBoxInt32': 0}
             ],
             [
               {'boxSize': 3343, 'dataSize': 3335, 'type': 'minf'},
@@ -140,7 +140,7 @@ void main() {
                     'boxSize': 28,
                     'dataSize': 16,
                     'type': 'dref',
-                    'fullBoxData': 0
+                    'fullBoxInt32': 0
                   }
                 ]
               ],
@@ -151,7 +151,7 @@ void main() {
                     'boxSize': 127,
                     'dataSize': 115,
                     'type': 'stsd',
-                    'fullBoxData': 0
+                    'fullBoxInt32': 0
                   }
                 ],
                 [
@@ -159,7 +159,7 @@ void main() {
                     'boxSize': 24,
                     'dataSize': 12,
                     'type': 'stts',
-                    'fullBoxData': 0
+                    'fullBoxInt32': 0
                   }
                 ],
                 [
@@ -167,7 +167,7 @@ void main() {
                     'boxSize': 32,
                     'dataSize': 20,
                     'type': 'stss',
-                    'fullBoxData': 0
+                    'fullBoxInt32': 0
                   }
                 ],
                 [
@@ -178,7 +178,7 @@ void main() {
                     'boxSize': 28,
                     'dataSize': 16,
                     'type': 'stsc',
-                    'fullBoxData': 0
+                    'fullBoxInt32': 0
                   }
                 ],
                 [
@@ -186,7 +186,7 @@ void main() {
                     'boxSize': 1520,
                     'dataSize': 1508,
                     'type': 'stsz',
-                    'fullBoxData': 0
+                    'fullBoxInt32': 0
                   }
                 ],
                 [
@@ -194,7 +194,7 @@ void main() {
                     'boxSize': 1516,
                     'dataSize': 1504,
                     'type': 'stco',
-                    'fullBoxData': 0
+                    'fullBoxInt32': 0
                   }
                 ]
               ]
@@ -214,21 +214,21 @@ void main() {
         {'boxSize': 24, 'dataSize': 16, 'type': 'ftyp'}
       ],
       [
-        {'boxSize': 510, 'dataSize': 498, 'type': 'meta', 'fullBoxData': 0},
+        {'boxSize': 510, 'dataSize': 498, 'type': 'meta', 'fullBoxInt32': 0},
         [
-          {'boxSize': 33, 'dataSize': 21, 'type': 'hdlr', 'fullBoxData': 0}
+          {'boxSize': 33, 'dataSize': 21, 'type': 'hdlr', 'fullBoxInt32': 0}
         ],
         [
-          {'boxSize': 14, 'dataSize': 2, 'type': 'pitm', 'fullBoxData': 0}
+          {'boxSize': 14, 'dataSize': 2, 'type': 'pitm', 'fullBoxInt32': 0}
         ],
         [
-          {'boxSize': 52, 'dataSize': 40, 'type': 'iloc', 'fullBoxData': 0}
+          {'boxSize': 52, 'dataSize': 40, 'type': 'iloc', 'fullBoxInt32': 0}
         ],
         [
-          {'boxSize': 76, 'dataSize': 64, 'type': 'iinf', 'fullBoxData': 0}
+          {'boxSize': 76, 'dataSize': 64, 'type': 'iinf', 'fullBoxInt32': 0}
         ],
         [
-          {'boxSize': 26, 'dataSize': 14, 'type': 'iref', 'fullBoxData': 0},
+          {'boxSize': 26, 'dataSize': 14, 'type': 'iref', 'fullBoxInt32': 0},
           [
             {'boxSize': 14, 'dataSize': 6, 'type': 'thmb'}
           ]
@@ -275,42 +275,42 @@ void main() {
         'boxSize': 510,
         'dataSize': 498,
         'type': 'meta',
-        'fullBoxData': 0,
+        'fullBoxInt32': 0,
         'depth': 1
       },
       {
         'boxSize': 33,
         'dataSize': 21,
         'type': 'hdlr',
-        'fullBoxData': 0,
+        'fullBoxInt32': 0,
         'depth': 2
       },
       {
         'boxSize': 14,
         'dataSize': 2,
         'type': 'pitm',
-        'fullBoxData': 0,
+        'fullBoxInt32': 0,
         'depth': 2
       },
       {
         'boxSize': 52,
         'dataSize': 40,
         'type': 'iloc',
-        'fullBoxData': 0,
+        'fullBoxInt32': 0,
         'depth': 2
       },
       {
         'boxSize': 76,
         'dataSize': 64,
         'type': 'iinf',
-        'fullBoxData': 0,
+        'fullBoxInt32': 0,
         'depth': 2
       },
       {
         'boxSize': 26,
         'dataSize': 14,
         'type': 'iref',
-        'fullBoxData': 0,
+        'fullBoxInt32': 0,
         'depth': 2
       },
       {'boxSize': 14, 'dataSize': 6, 'type': 'thmb', 'depth': 3},
