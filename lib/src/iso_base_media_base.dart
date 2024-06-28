@@ -139,6 +139,22 @@ abstract class ISOBoxBase {
   Future<ISOBox?> nextChild();
 }
 
+/// Represents the full box info.
+class ISOFullBoxInfo {
+  /// The version data in this full box.
+  final int version;
+
+  /// The flags data in this full box.
+  final int flags;
+
+  ISOFullBoxInfo(this.version, this.flags);
+
+  @override
+  String toString() {
+    return 'ISOFullBoxInfo{version: $version, flags: $flags}';
+  }
+}
+
 /// Represents an ISO box.
 class ISOBox implements ISOBoxBase {
   /// The size of the box.
@@ -198,6 +214,7 @@ class ISOBox implements ISOBoxBase {
     return toDict().toString();
   }
 
+  /// Converts the box to a dictionary.
   Map<String, dynamic> toDict() {
     final res = <String, dynamic>{
       'boxSize': boxSize,
@@ -210,9 +227,20 @@ class ISOBox implements ISOBoxBase {
     return res;
   }
 
+  /// Extracts the data from the box.
   Future<Uint8List> extractData() async {
     await _file.setPosition(_dataOffset);
     return await _file.read(dataSize);
+  }
+
+  /// Returns the full box info.
+  ISOFullBoxInfo? getFullBoxInfo() {
+    if (fullBoxInt32 == null) {
+      return null;
+    }
+    final version = (fullBoxInt32! >> 24) & 0xff;
+    final flags = fullBoxInt32! & 0xffffff;
+    return ISOFullBoxInfo(version, flags);
   }
 }
 

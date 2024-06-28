@@ -1,8 +1,4 @@
-/// Support for doing something awesome.
-///
-/// More dartdocs go here.
+/// A dart package to parse ISO Base Media File Format and MP4 files.
 library;
 
 export 'src/iso_base_media_base.dart';
-
-// TODO: Export any libraries intended for clients of this package.
