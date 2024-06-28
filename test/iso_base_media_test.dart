@@ -5,7 +5,7 @@ import 'package:iso_base_media/iso_base_media.dart';
 import 'package:test/test.dart';
 
 Future<void> testFile(String fileName, List<Object> expected,
-    {RandomAccessFile? raf}) async {
+    {RandomAccessFile? raf, bool? showOffset}) async {
   ISOFileBox fileBox;
   if (raf != null) {
     fileBox = await ISOFileBox.openRandomAccessFile(raf);
@@ -14,7 +14,7 @@ Future<void> testFile(String fileName, List<Object> expected,
     fileBox = await ISOFileBox.open('./test/test_files/$fileName');
     expect(fileBox.canClose, isTrue);
   }
-  final actual = await inspectISOBox(fileBox);
+  final actual = await inspectISOBox(fileBox, showOffset: showOffset);
   expect(actual, expected);
   await fileBox.close();
 }
@@ -302,6 +302,164 @@ void main() {
           ]
         ],
         raf: raf);
+  });
+
+  test('Show offset', () async {
+    await testFile(
+        'a.heic',
+        [
+          [
+            {
+              'boxSize': 24,
+              'dataSize': 16,
+              'type': 'ftyp',
+              'headerOffset': 0,
+              'dataOffset': 8
+            }
+          ],
+          [
+            {
+              'boxSize': 510,
+              'dataSize': 498,
+              'type': 'meta',
+              'fullBoxInt32': 0,
+              'headerOffset': 24,
+              'dataOffset': 36
+            },
+            [
+              {
+                'boxSize': 33,
+                'dataSize': 21,
+                'type': 'hdlr',
+                'fullBoxInt32': 0,
+                'headerOffset': 36,
+                'dataOffset': 48
+              }
+            ],
+            [
+              {
+                'boxSize': 14,
+                'dataSize': 2,
+                'type': 'pitm',
+                'fullBoxInt32': 0,
+                'headerOffset': 69,
+                'dataOffset': 81
+              }
+            ],
+            [
+              {
+                'boxSize': 52,
+                'dataSize': 40,
+                'type': 'iloc',
+                'fullBoxInt32': 0,
+                'headerOffset': 83,
+                'dataOffset': 95
+              }
+            ],
+            [
+              {
+                'boxSize': 76,
+                'dataSize': 64,
+                'type': 'iinf',
+                'fullBoxInt32': 0,
+                'headerOffset': 135,
+                'dataOffset': 147
+              }
+            ],
+            [
+              {
+                'boxSize': 26,
+                'dataSize': 14,
+                'type': 'iref',
+                'fullBoxInt32': 0,
+                'headerOffset': 211,
+                'dataOffset': 223
+              },
+              [
+                {
+                  'boxSize': 14,
+                  'dataSize': 6,
+                  'type': 'thmb',
+                  'headerOffset': 223,
+                  'dataOffset': 231
+                }
+              ]
+            ],
+            [
+              {
+                'boxSize': 297,
+                'dataSize': 289,
+                'type': 'iprp',
+                'headerOffset': 237,
+                'dataOffset': 245
+              },
+              [
+                {
+                  'boxSize': 263,
+                  'dataSize': 255,
+                  'type': 'ipco',
+                  'headerOffset': 245,
+                  'dataOffset': 253
+                },
+                [
+                  {
+                    'boxSize': 108,
+                    'dataSize': 100,
+                    'type': 'hvcC',
+                    'headerOffset': 253,
+                    'dataOffset': 261
+                  }
+                ],
+                [
+                  {
+                    'boxSize': 20,
+                    'dataSize': 12,
+                    'type': 'ispe',
+                    'headerOffset': 361,
+                    'dataOffset': 369
+                  }
+                ],
+                [
+                  {
+                    'boxSize': 107,
+                    'dataSize': 99,
+                    'type': 'hvcC',
+                    'headerOffset': 381,
+                    'dataOffset': 389
+                  }
+                ],
+                [
+                  {
+                    'boxSize': 20,
+                    'dataSize': 12,
+                    'type': 'ispe',
+                    'headerOffset': 488,
+                    'dataOffset': 496
+                  }
+                ]
+              ],
+              [
+                {
+                  'boxSize': 26,
+                  'dataSize': 18,
+                  'type': 'ipma',
+                  'headerOffset': 508,
+                  'dataOffset': 516
+                }
+              ]
+            ]
+          ],
+          [
+            {
+              'boxSize': 293074,
+              'dataSize': 293066,
+              'type': 'mdat',
+              'headerOffset': 534,
+              'dataOffset': 542
+            }
+          ]
+        ],
+        showOffset: true);
   });
 
   test('Callback', () async {

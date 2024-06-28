@@ -82,6 +82,7 @@ const _fullBoxes = {
 };
 
 Future<ISOBox?> _readChildBox(RandomAccessFile file) async {
+  final headerOffset = await file.position();
   final sizeBuffer = await file.read(4);
   if (sizeBuffer.length < 4) {
     return null;
@@ -126,10 +127,11 @@ Future<ISOBox?> _readChildBox(RandomAccessFile file) async {
     fullBoxInt32 = fullBoxInt32Buffer.buffer.asByteData().getUint32(0);
   }
 
-  final dataPoz = await file.position();
-  final box = ISOBox(boxSize, type, isContainer, file, dataPoz, fullBoxInt32);
+  final dataOffset = await file.position();
+  final box = ISOBox(
+      boxSize, type, isContainer, file, headerOffset, dataOffset, fullBoxInt32);
 
-  await file.setPosition(dataPoz + box.dataSize);
+  await file.setPosition(dataOffset + box.dataSize);
   return box;
 }
 
@@ -181,7 +183,13 @@ class ISOBox implements ISOBoxBase {
   /// The full box data.
   final int? fullBoxInt32;
 
-  final int _dataOffset;
+  /// The offset of the header in the file.
+  final int headerOffset;
+
+  /// The offset of the data in the file.
+  final int dataOffset;
+
+  /// Current parsing offset.
   late int _currentOffset;
 
   ISOBox(
@@ -189,10 +197,11 @@ class ISOBox implements ISOBoxBase {
     this.type,
     this.isContainer,
     this._file,
-    this._dataOffset,
+    this.headerOffset,
+    this.dataOffset,
     this.fullBoxInt32,
   ) {
-    _currentOffset = _dataOffset;
+    _currentOffset = dataOffset;
   }
 
   @override
@@ -200,7 +209,7 @@ class ISOBox implements ISOBoxBase {
     if (!_containerBoxes.contains(type)) {
       return null;
     }
-    if (_currentOffset - _dataOffset >= dataSize) {
+    if (_currentOffset - dataOffset >= dataSize) {
       return null;
     }
     await _file.setPosition(_currentOffset);
@@ -215,7 +224,7 @@ class ISOBox implements ISOBoxBase {
   }
 
   /// Converts the box to a dictionary.
-  Map<String, dynamic> toDict() {
+  Map<String, dynamic> toDict({bool showOffset = false}) {
     final res = <String, dynamic>{
       'boxSize': boxSize,
       'dataSize': dataSize,
@@ -224,12 +233,16 @@ class ISOBox implements ISOBoxBase {
     if (fullBoxInt32 != null) {
       res['fullBoxInt32'] = fullBoxInt32;
     }
+    if (showOffset) {
+      res['headerOffset'] = headerOffset;
+      res['dataOffset'] = dataOffset;
+    }
     return res;
   }
 
   /// Extracts the data from the box.
   Future<Uint8List> extractData() async {
-    await _file.setPosition(_dataOffset);
+    await _file.setPosition(dataOffset);
     return await _file.read(dataSize);
   }
 
@@ -287,13 +300,14 @@ Future<List<Object>> _inspectISOBox(
   ISOBoxBase box,
   int depth, {
   FutureOr<void> Function(ISOBox box, int depth)? callback,
+  bool? showOffset,
 }) async {
   final res = <Object>[];
   if (box is ISOBox) {
     if (callback != null) {
       await callback(box, depth);
     } else {
-      res.add(box.toDict());
+      res.add(box.toDict(showOffset: showOffset ?? false));
     }
     if (!box.isContainer) {
       return res;
@@ -303,8 +317,8 @@ Future<List<Object>> _inspectISOBox(
   do {
     child = await box.nextChild();
     if (child != null) {
-      final childInspection =
-          await _inspectISOBox(child, depth + 1, callback: callback);
+      final childInspection = await _inspectISOBox(child, depth + 1,
+          callback: callback, showOffset: showOffset);
       if (callback == null) {
         res.add(childInspection);
       }
@@ -319,6 +333,7 @@ Future<List<Object>> _inspectISOBox(
 Future<List<Object>> inspectISOBox(
   ISOBoxBase box, {
   FutureOr<void> Function(ISOBox box, int depth)? callback,
+  bool? showOffset,
 }) async {
-  return _inspectISOBox(box, 0, callback: callback);
+  return _inspectISOBox(box, 0, callback: callback, showOffset: showOffset);
 }
