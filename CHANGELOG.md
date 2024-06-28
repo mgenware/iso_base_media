@@ -1,3 +1,7 @@
+## 1.3.0
+
+- Ability to start parsing from a random access file.
+
 ## 1.2.0
 
 - Add `ISOFullBoxInfo`

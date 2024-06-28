@@ -87,3 +87,10 @@ bytes(12): 00 00 00 00 00 00 05 a0 00 00 03 c0
 bytes(12): 00 00 00 00 00 00 00 f0 00 00 00 a0
 */
 ```
+
+### Start parsing from a `RandomAccessFile`
+
+```dart
+final fileBox = await ISOFileBox.openRandomAccessFile(someRandomAccessFile);
+// It's now user's responsibility to close the random access file.
+```

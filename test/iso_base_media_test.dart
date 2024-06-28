@@ -1,10 +1,19 @@
+import 'dart:io';
 import 'dart:typed_data';
 
 import 'package:iso_base_media/iso_base_media.dart';
 import 'package:test/test.dart';
 
-Future<void> testFile(String fileName, List<Object> expected) async {
-  final fileBox = await ISOFileBox.open('./test/test_files/$fileName');
+Future<void> testFile(String fileName, List<Object> expected,
+    {RandomAccessFile? raf}) async {
+  ISOFileBox fileBox;
+  if (raf != null) {
+    fileBox = await ISOFileBox.openRandomAccessFile(raf);
+    expect(fileBox.canClose, isFalse);
+  } else {
+    fileBox = await ISOFileBox.open('./test/test_files/$fileName');
+    expect(fileBox.canClose, isTrue);
+  }
   final actual = await inspectISOBox(fileBox);
   expect(actual, expected);
   await fileBox.close();
@@ -259,6 +268,40 @@ void main() {
         {'boxSize': 293074, 'dataSize': 293066, 'type': 'mdat'}
       ]
     ]);
+  });
+
+  test('RAF', () async {
+    final raf = await File('./test/test_files/a.jxl').open();
+    // Skip the first 12 bytes.
+    await raf.setPosition(12);
+    await testFile(
+        '',
+        [
+          [
+            {'boxSize': 20, 'dataSize': 12, 'type': 'ftyp'}
+          ],
+          [
+            {'boxSize': 20, 'dataSize': 12, 'type': 'jxlp'}
+          ],
+          [
+            {'boxSize': 185, 'dataSize': 177, 'type': 'jbrd'}
+          ],
+          [
+            {'boxSize': 675824, 'dataSize': 675816, 'type': 'jxlp'}
+          ],
+          [
+            {'boxSize': 124, 'dataSize': 116, 'type': 'Exif'}
+          ],
+          [
+            {
+              'boxSize': 2895,
+              'dataSize': 2883,
+              'type': 'xml ',
+              'fullBoxInt32': 1010792560
+            }
+          ]
+        ],
+        raf: raf);
   });
 
   test('Callback', () async {

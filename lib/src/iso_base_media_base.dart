@@ -246,22 +246,32 @@ class ISOBox implements ISOBoxBase {
 
 /// Can be used to read ISO boxes from a file.
 class ISOFileBox implements ISOBoxBase {
-  final String filePath;
-  final RandomAccessFile _file;
+  /// Whether the internal random access file can be closed.
+  /// If false, the user is responsible for closing the internal file.
+  /// This is true when file box is created using [open] method.
+  /// And false when created using [openRandomAccessFile] method.
+  final bool canClose;
 
+  final RandomAccessFile _file;
   int _offset = 0;
 
-  ISOFileBox._(this.filePath, this._file);
+  ISOFileBox._(this._file, this._offset, this.canClose);
 
   /// Opens a file and returns an instance of [ISOFileBox].
   static Future<ISOFileBox> open(String filePath) async {
     final raf = await File(filePath).open();
-    return ISOFileBox._(filePath, raf);
+    return ISOFileBox._(raf, 0, true);
+  }
+
+  static Future<ISOFileBox> openRandomAccessFile(RandomAccessFile raf) async {
+    return ISOFileBox._(raf, await raf.position(), false);
   }
 
   /// Closes the file.
   Future<void> close() async {
-    await _file.close();
+    if (canClose) {
+      await _file.close();
+    }
   }
 
   @override
