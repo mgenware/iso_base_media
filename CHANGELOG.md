@@ -1,3 +1,7 @@
+## 1.5.0
+
+- Add some helper functions to work with boxes.
+
 ## 1.4.0
 
 - Expose data offset and header offset in `ISOBox`.
