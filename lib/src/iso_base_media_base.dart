@@ -79,6 +79,7 @@ const _fullBoxes = {
   'sidx',
   'ssix',
   'prft',
+  'auxC',
 };
 
 Future<ISOBox?> _readChildBox(RandomAccessFile file) async {

@@ -2,3 +2,4 @@
 library;
 
 export 'src/iso_base_media_base.dart';
+export 'src/iso_util.dart';
