@@ -82,7 +82,7 @@ const _fullBoxes = {
   'auxC',
 };
 
-Future<ISOBox?> _readChildBox(RandomAccessFile file) async {
+Future<ISOBox?> _readChildBox(ISOBoxBase parent, RandomAccessFile file) async {
   final headerOffset = await file.position();
   final sizeBuffer = await file.read(4);
   if (sizeBuffer.length < 4) {
@@ -129,8 +129,8 @@ Future<ISOBox?> _readChildBox(RandomAccessFile file) async {
   }
 
   final dataOffset = await file.position();
-  final box = ISOBox(
-      boxSize, type, isContainer, file, headerOffset, dataOffset, fullBoxInt32);
+  final box = ISOBox(parent, boxSize, type, isContainer, file, headerOffset,
+      dataOffset, fullBoxInt32);
 
   await file.setPosition(dataOffset + box.dataSize);
   return box;
@@ -163,6 +163,9 @@ class ISOBox implements ISOBoxBase {
   /// The size of the box.
   final int boxSize;
 
+  /// The parent box.
+  final ISOBoxBase parent;
+
   int get headerSize =>
       // 8 bytes for header size.
       8 +
@@ -194,6 +197,7 @@ class ISOBox implements ISOBoxBase {
   late int _currentOffset;
 
   ISOBox(
+    this.parent,
     this.boxSize,
     this.type,
     this.isContainer,
@@ -214,7 +218,7 @@ class ISOBox implements ISOBoxBase {
       return null;
     }
     await _file.setPosition(_currentOffset);
-    final box = await _readChildBox(_file);
+    final box = await _readChildBox(this, _file);
     _currentOffset = await _file.position();
     return box;
   }
@@ -225,18 +229,19 @@ class ISOBox implements ISOBoxBase {
   }
 
   /// Converts the box to a dictionary.
-  Map<String, dynamic> toDict({bool showOffset = false}) {
+  Map<String, dynamic> toDict() {
     final res = <String, dynamic>{
       'boxSize': boxSize,
       'dataSize': dataSize,
       'type': type,
+      'headerOffset': headerOffset,
+      'dataOffset': dataOffset,
     };
     if (fullBoxInt32 != null) {
       res['fullBoxInt32'] = fullBoxInt32;
     }
-    if (showOffset) {
-      res['headerOffset'] = headerOffset;
-      res['dataOffset'] = dataOffset;
+    if (parent is ISOBox) {
+      res['parent'] = (parent as ISOBox).type;
     }
     return res;
   }
@@ -291,50 +296,54 @@ class ISOFileBox implements ISOBoxBase {
   @override
   Future<ISOBox?> nextChild() async {
     await _file.setPosition(_offset);
-    final box = await _readChildBox(_file);
+    final box = await _readChildBox(this, _file);
     _offset = await _file.position();
     return box;
   }
 }
 
-Future<List<Object>> _inspectISOBox(
+Future<Map<String, dynamic>> _inspectISOBox(
   ISOBoxBase box,
   int depth, {
   FutureOr<void> Function(ISOBox box, int depth)? callback,
-  bool? showOffset,
 }) async {
-  final res = <Object>[];
+  final dict = box is ISOBox ? box.toDict() : <String, dynamic>{'root': true};
   if (box is ISOBox) {
     if (callback != null) {
       await callback(box, depth);
-    } else {
-      res.add(box.toDict(showOffset: showOffset ?? false));
     }
     if (!box.isContainer) {
-      return res;
+      return dict;
     }
   }
   ISOBox? child;
+  final childDicts = <Map<String, dynamic>>[];
   do {
     child = await box.nextChild();
     if (child != null) {
-      final childInspection = await _inspectISOBox(child, depth + 1,
-          callback: callback, showOffset: showOffset);
+      final childInspection =
+          await _inspectISOBox(child, depth + 1, callback: callback);
       if (callback == null) {
-        res.add(childInspection);
+        childDicts.add(childInspection);
       }
     }
   } while (child != null);
-  return res;
+  if (childDicts.isNotEmpty) {
+    dict['children'] = childDicts;
+  }
+  return dict;
 }
 
 /// Inspects an ISO box.
 /// Returns all child boxes in a tree structure. If [callback] is not null,
 /// it will return an empty list.
-Future<List<Object>> inspectISOBox(
+Future<Map<String, dynamic>> inspectISOBox(
   ISOBoxBase box, {
   FutureOr<void> Function(ISOBox box, int depth)? callback,
-  bool? showOffset,
 }) async {
-  return _inspectISOBox(box, 0, callback: callback, showOffset: showOffset);
+  return _inspectISOBox(
+    box,
+    0,
+    callback: callback,
+  );
 }
