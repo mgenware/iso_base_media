@@ -19,6 +19,13 @@ void main() {
     });
   });
 
+  test('getDirectChildByTypes (empty)', () async {
+    final root = await _openFile('a.heic');
+    final firstMatch = await root
+        .getDirectChildByTypes({'ftyp__', 'meta__'}, isContainerCallback: null);
+    expect(firstMatch, null);
+  });
+
   test('getDirectChildrenByTypes', () async {
     final root = await _openFile('a.heic');
     final matches = await root
@@ -42,6 +49,13 @@ void main() {
     ]);
   });
 
+  test('getDirectChildrenByTypes (empty)', () async {
+    final root = await _openFile('a.heic');
+    final matches = await root.getDirectChildrenByTypes({'ftyp__', 'meta__'},
+        isContainerCallback: null);
+    expect(matches, <ISOBox>[]);
+  });
+
   test('getChildByTypePath', () async {
     final root = await _openFile('a.heic');
     final match = await root
@@ -55,5 +69,12 @@ void main() {
       'fullBoxInt32': 0,
       'parent': 'meta'
     });
+  });
+
+  test('getChildByTypePath (empty)', () async {
+    final root = await _openFile('a.heic');
+    final match = await root
+        .getChildByTypePath(['meta__', 'iinf__'], isContainerCallback: null);
+    expect(match, null);
   });
 }

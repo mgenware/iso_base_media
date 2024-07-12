@@ -1,3 +1,7 @@
+## 2.1.1
+
+- Update extension methods.
+
 ## 2.0.0
 
 - Allow customizing container boxes via ``isContainerCallback`.

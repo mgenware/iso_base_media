@@ -42,6 +42,6 @@ extension ISOBoxExt on ISOBoxBase {
       box = await box.getDirectChildByTypes(<String>{type},
           isContainerCallback: isContainerCallback);
     }
-    return box == null ? null : box as ISOBox;
+    return box is ISOBox ? box : null;
   }
 }
