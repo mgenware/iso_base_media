@@ -16,6 +16,7 @@ const _containerBoxes = {
   'iref',
   'iprp',
   'ipco',
+  'grpl',
 };
 
 const _fullBoxes = {
