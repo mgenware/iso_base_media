@@ -223,3 +223,24 @@ isContainerCallback: (type, parent) {
   return false;
 }
 ```
+
+### Extension methods
+
+The base box class has a few extension methods:
+
+```dart
+/// Returns a direct child box by given types.
+Future<ISOBox?> getDirectChildByTypes(Set<String> types,
+    {required bool Function(String type, ISOBox? parent)?
+        isContainerCallback});
+
+/// Returns a list of direct children by given types.
+Future<List<ISOBox>> getDirectChildrenByTypes(Set<String> types,
+    {required bool Function(String type, ISOBox? parent)?
+        isContainerCallback});
+
+/// Returns a child box by a given type path.
+Future<ISOBox?> getChildByTypePath(List<String> path,
+    {required bool Function(String type, ISOBox? parent)?
+        isContainerCallback});
+```
