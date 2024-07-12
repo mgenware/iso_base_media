@@ -12,7 +12,7 @@ A dart package to parse ISO Base Media File Format and MP4 files.
 ```dart
 Future<void> inspect() async {
   final fileBox = await ISOFileBox.open('./test/test_files/a.heic');
-  final s = await inspectISOBox(fileBox);
+  final s = await inspectISOBox(fileBox, isContainerCallback: null);
   await fileBox.close();
   print(s);
 }
@@ -172,7 +172,7 @@ Future<void> extract() async {
   var s = '';
 
   // Find all 'ispe' boxes.
-  await inspectISOBox(fileBox, callback: (box, depth) async {
+  await inspectISOBox(fileBox, isContainerCallback: null, callback: (box, depth) async {
     if (box.type == 'ispe') {
       final data = await box.extractData();
       s += '${uint8ListToHex(data)}\n';
@@ -206,4 +206,20 @@ bytes(12): 00 00 00 00 00 00 00 f0 00 00 00 a0
 ```dart
 final fileBox = await ISOFileBox.openRandomAccessFile(someRandomAccessFile);
 // It's now user's responsibility to close the random access file.
+```
+
+### Determine what boxes are containers
+
+You probably noticed that all the examples above has `isContainerCallback: null`. When `isContainerCallback` is `null`, this package uses a default set of rules to determine if a box is a container. **If you are doing anything serious, you should provide your own `isContainerCallback`**.
+
+`isContainerCallback` has 2 parameters: `type` and `parent`. `type` is the box type, `parent` is the parent box. If `parent` is `null`, it means the box is the root box.
+
+```dart
+isContainerCallback: (type, parent) {
+  // Only root `meta` box is a container.
+  if (type == 'meta' && parent == null) {
+    return true;
+  }
+  return false;
+}
 ```

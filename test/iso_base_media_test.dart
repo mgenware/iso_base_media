@@ -14,7 +14,7 @@ Future<void> testFile(String fileName, Map<String, dynamic> expected,
     fileBox = await ISOFileBox.open('./test/test_files/$fileName');
     expect(fileBox.canClose, isTrue);
   }
-  final actual = await inspectISOBox(fileBox);
+  final actual = await inspectISOBox(fileBox, isContainerCallback: null);
   expect(actual, expected);
   await fileBox.close();
 }
@@ -537,7 +537,8 @@ void main() {
   test('Callback', () async {
     final list = <Object>[];
     final fileBox = await ISOFileBox.open('./test/test_files/a.heic');
-    await inspectISOBox(fileBox, callback: (box, depth) {
+    await inspectISOBox(fileBox, isContainerCallback: null,
+        callback: (box, depth) {
       final dict = box.toDict();
       dict['depth'] = depth;
       list.add(dict);
@@ -698,7 +699,8 @@ void main() {
   test('Callback (early exit)', () async {
     final list = <Object>[];
     final fileBox = await ISOFileBox.open('./test/test_files/a.heic');
-    await inspectISOBox(fileBox, callback: (box, depth) {
+    await inspectISOBox(fileBox, isContainerCallback: null,
+        callback: (box, depth) {
       final dict = box.toDict();
       dict['depth'] = depth;
       list.add(dict);
@@ -737,10 +739,114 @@ void main() {
     await fileBox.close();
   });
 
+  test('Callback (isContainerCallback)', () async {
+    final list = <Object>[];
+    final fileBox = await ISOFileBox.open('./test/test_files/a.heic');
+    await inspectISOBox(fileBox, isContainerCallback: (type, parent) {
+      if (type == 'meta' && parent == null) {
+        return true;
+      }
+      return false;
+    }, callback: (box, depth) {
+      final dict = box.toDict();
+      dict['depth'] = depth;
+      list.add(dict);
+      return true;
+    });
+    expect(list, [
+      {
+        'boxSize': 24,
+        'dataSize': 16,
+        'type': 'ftyp',
+        'headerOffset': 0,
+        'dataOffset': 8,
+        'depth': 1
+      },
+      {
+        'boxSize': 510,
+        'dataSize': 498,
+        'type': 'meta',
+        'headerOffset': 24,
+        'dataOffset': 36,
+        'fullBoxInt32': 0,
+        'depth': 1
+      },
+      {
+        'boxSize': 33,
+        'dataSize': 21,
+        'type': 'hdlr',
+        'headerOffset': 36,
+        'dataOffset': 48,
+        'fullBoxInt32': 0,
+        'parent': 'meta',
+        'depth': 2
+      },
+      {
+        'boxSize': 14,
+        'dataSize': 2,
+        'type': 'pitm',
+        'headerOffset': 69,
+        'dataOffset': 81,
+        'fullBoxInt32': 0,
+        'parent': 'meta',
+        'depth': 2
+      },
+      {
+        'boxSize': 52,
+        'dataSize': 40,
+        'type': 'iloc',
+        'headerOffset': 83,
+        'dataOffset': 95,
+        'fullBoxInt32': 0,
+        'parent': 'meta',
+        'depth': 2
+      },
+      {
+        'boxSize': 76,
+        'dataSize': 64,
+        'type': 'iinf',
+        'headerOffset': 135,
+        'dataOffset': 147,
+        'fullBoxInt32': 0,
+        'parent': 'meta',
+        'depth': 2
+      },
+      {
+        'boxSize': 26,
+        'dataSize': 14,
+        'type': 'iref',
+        'headerOffset': 211,
+        'dataOffset': 223,
+        'fullBoxInt32': 0,
+        'parent': 'meta',
+        'depth': 2
+      },
+      {
+        'boxSize': 297,
+        'dataSize': 289,
+        'type': 'iprp',
+        'headerOffset': 237,
+        'dataOffset': 245,
+        'parent': 'meta',
+        'depth': 2
+      },
+      {
+        'boxSize': 293074,
+        'dataSize': 293066,
+        'type': 'mdat',
+        'headerOffset': 534,
+        'dataOffset': 542,
+        'depth': 1
+      }
+    ]);
+    await fileBox.close();
+  });
+
   test('Extract data', () async {
     final fileBox = await ISOFileBox.open('./test/test_files/a.heic');
     var s = '';
-    await inspectISOBox(fileBox, callback: (box, depth) async {
+    await inspectISOBox(fileBox, isContainerCallback: null,
+        callback: (box, depth) async {
       if (box.type == 'ispe') {
         final data = await box.extractData();
         s += '${uint8ListToHex(data)}|';

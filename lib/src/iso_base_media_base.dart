@@ -82,7 +82,15 @@ const _fullBoxes = {
   'auxC',
 };
 
-Future<ISOBox?> _readChildBox(ISOBoxBase parent, RandomAccessFile file) async {
+bool _checkIsContainerBox(String type, ISOBoxBase parent,
+    bool Function(String type, ISOBox? parent)? isContainerCallback) {
+  return isContainerCallback != null
+      ? isContainerCallback(type, parent is ISOBox ? parent : null)
+      : _containerBoxes.contains(type);
+}
+
+Future<ISOBox?> _readChildBox(ISOBoxBase parent, RandomAccessFile file,
+    bool Function(String type, ISOBox? parent)? isContainerCallback) async {
   final headerOffset = await file.position();
   final sizeBuffer = await file.read(4);
   if (sizeBuffer.length < 4) {
@@ -117,7 +125,7 @@ Future<ISOBox?> _readChildBox(ISOBoxBase parent, RandomAccessFile file) async {
   }
 
   final fullBox = _fullBoxes.contains(type);
-  final isContainer = _containerBoxes.contains(type);
+  final isContainer = _checkIsContainerBox(type, parent, isContainerCallback);
 
   int? fullBoxInt32;
   if (fullBox) {
@@ -139,7 +147,10 @@ Future<ISOBox?> _readChildBox(ISOBoxBase parent, RandomAccessFile file) async {
 /// Base class for ISO boxes.
 abstract class ISOBoxBase {
   /// Returns the next child box.
-  Future<ISOBox?> nextChild();
+  /// [isContainerCallback] is a function that returns whether a box is a container.
+  Future<ISOBox?> nextChild(
+      {required bool Function(String type, ISOBox? parent)?
+          isContainerCallback});
 }
 
 /// Represents the full box info.
@@ -210,15 +221,17 @@ class ISOBox implements ISOBoxBase {
   }
 
   @override
-  Future<ISOBox?> nextChild() async {
-    if (!_containerBoxes.contains(type)) {
+  Future<ISOBox?> nextChild(
+      {required bool Function(String type, ISOBox? parent)?
+          isContainerCallback}) async {
+    if (!isContainer) {
       return null;
     }
     if (_currentOffset - dataOffset >= dataSize) {
       return null;
     }
     await _file.setPosition(_currentOffset);
-    final box = await _readChildBox(this, _file);
+    final box = await _readChildBox(this, _file, isContainerCallback);
     _currentOffset = await _file.position();
     return box;
   }
@@ -294,9 +307,11 @@ class ISOFileBox implements ISOBoxBase {
   }
 
   @override
-  Future<ISOBox?> nextChild() async {
+  Future<ISOBox?> nextChild(
+      {required bool Function(String type, ISOBox? parent)?
+          isContainerCallback}) async {
     await _file.setPosition(_offset);
-    final box = await _readChildBox(this, _file);
+    final box = await _readChildBox(this, _file, isContainerCallback);
     _offset = await _file.position();
     return box;
   }
@@ -305,6 +320,7 @@ class ISOFileBox implements ISOBoxBase {
 Future<Map<String, dynamic>?> _inspectISOBox(
   ISOBoxBase box,
   int depth, {
+  required bool Function(String type, ISOBox? parent)? isContainerCallback,
   FutureOr<bool> Function(ISOBox box, int depth)? callback,
 }) async {
   Map<String, dynamic>? dict;
@@ -326,10 +342,10 @@ Future<Map<String, dynamic>?> _inspectISOBox(
   ISOBox? child;
   final childDicts = <Map<String, dynamic>>[];
   do {
-    child = await box.nextChild();
+    child = await box.nextChild(isContainerCallback: isContainerCallback);
     if (child != null) {
-      final childInspection =
-          await _inspectISOBox(child, depth + 1, callback: callback);
+      final childInspection = await _inspectISOBox(child, depth + 1,
+          callback: callback, isContainerCallback: isContainerCallback);
       if (callback == null && childInspection != null) {
         childDicts.add(childInspection);
       }
@@ -348,11 +364,13 @@ Future<Map<String, dynamic>?> _inspectISOBox(
 /// inspected.
 Future<Map<String, dynamic>?> inspectISOBox(
   ISOBoxBase box, {
+  required bool Function(String type, ISOBox? parent)? isContainerCallback,
   FutureOr<bool> Function(ISOBox box, int depth)? callback,
 }) async {
   return _inspectISOBox(
     box,
     0,
+    isContainerCallback: isContainerCallback,
     callback: callback,
   );
 }

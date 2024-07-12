@@ -6,7 +6,7 @@ import 'package:iso_base_media/iso_base_media.dart';
 
 Future<void> inspect() async {
   final fileBox = await ISOFileBox.open('./test/test_files/a.heic');
-  final s = await inspectISOBox(fileBox);
+  final s = await inspectISOBox(fileBox, isContainerCallback: null);
   await fileBox.close();
   print(s);
 }
@@ -14,7 +14,8 @@ Future<void> inspect() async {
 Future<void> extract() async {
   final fileBox = await ISOFileBox.open('./test/test_files/a.heic');
   var s = '';
-  await inspectISOBox(fileBox, callback: (box, depth) async {
+  await inspectISOBox(fileBox, isContainerCallback: null,
+      callback: (box, depth) async {
     if (box.type == 'ispe') {
       final data = await box.extractData();
       s += '${uint8ListToHex(data)}\n';
