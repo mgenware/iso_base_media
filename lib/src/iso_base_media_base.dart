@@ -302,19 +302,26 @@ class ISOFileBox implements ISOBoxBase {
   }
 }
 
-Future<Map<String, dynamic>> _inspectISOBox(
+Future<Map<String, dynamic>?> _inspectISOBox(
   ISOBoxBase box,
   int depth, {
-  FutureOr<void> Function(ISOBox box, int depth)? callback,
+  FutureOr<bool> Function(ISOBox box, int depth)? callback,
 }) async {
-  final dict = box is ISOBox ? box.toDict() : <String, dynamic>{'root': true};
+  Map<String, dynamic>? dict;
+  if (callback == null) {
+    dict = box is ISOBox ? box.toDict() : <String, dynamic>{'root': true};
+  }
+  bool shouldContinue = true;
   if (box is ISOBox) {
     if (callback != null) {
-      await callback(box, depth);
+      shouldContinue = await callback(box, depth);
     }
     if (!box.isContainer) {
       return dict;
     }
+  }
+  if (!shouldContinue) {
+    return null;
   }
   ISOBox? child;
   final childDicts = <Map<String, dynamic>>[];
@@ -323,23 +330,25 @@ Future<Map<String, dynamic>> _inspectISOBox(
     if (child != null) {
       final childInspection =
           await _inspectISOBox(child, depth + 1, callback: callback);
-      if (callback == null) {
+      if (callback == null && childInspection != null) {
         childDicts.add(childInspection);
       }
     }
   } while (child != null);
-  if (childDicts.isNotEmpty) {
+  if (childDicts.isNotEmpty && dict != null) {
     dict['children'] = childDicts;
   }
   return dict;
 }
 
 /// Inspects an ISO box.
-/// Returns all child boxes in a tree structure. If [callback] is not null,
-/// it will return an empty list.
-Future<Map<String, dynamic>> inspectISOBox(
+/// Returns all child boxes in a tree structure. If [callback] is provided,
+/// it returns null.
+/// If [callback] returns false, the child boxes of the current box will not be
+/// inspected.
+Future<Map<String, dynamic>?> inspectISOBox(
   ISOBoxBase box, {
-  FutureOr<void> Function(ISOBox box, int depth)? callback,
+  FutureOr<bool> Function(ISOBox box, int depth)? callback,
 }) async {
   return _inspectISOBox(
     box,

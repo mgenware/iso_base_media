@@ -19,6 +19,7 @@ Future<void> extract() async {
       final data = await box.extractData();
       s += '${uint8ListToHex(data)}\n';
     }
+    return true;
   });
   await fileBox.close();
   print(s);

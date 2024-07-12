@@ -170,11 +170,16 @@ Future<void> inspect() async {
 Future<void> extract() async {
   final fileBox = await ISOFileBox.open('./test/test_files/a.heic');
   var s = '';
+
+  // Find all 'ispe' boxes.
   await inspectISOBox(fileBox, callback: (box, depth) async {
     if (box.type == 'ispe') {
       final data = await box.extractData();
       s += '${uint8ListToHex(data)}\n';
     }
+    // Continue inspecting child boxes.
+    // If you don't want to inspect child boxes, return false.
+    return true;
   });
   await fileBox.close();
   print(s);

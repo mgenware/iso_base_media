@@ -541,13 +541,23 @@ void main() {
       final dict = box.toDict();
       dict['depth'] = depth;
       list.add(dict);
+      return true;
     });
     expect(list, [
-      {'boxSize': 24, 'dataSize': 16, 'type': 'ftyp', 'depth': 1},
+      {
+        'boxSize': 24,
+        'dataSize': 16,
+        'type': 'ftyp',
+        'headerOffset': 0,
+        'dataOffset': 8,
+        'depth': 1
+      },
       {
         'boxSize': 510,
         'dataSize': 498,
         'type': 'meta',
+        'headerOffset': 24,
+        'dataOffset': 36,
         'fullBoxInt32': 0,
         'depth': 1
       },
@@ -555,46 +565,174 @@ void main() {
         'boxSize': 33,
         'dataSize': 21,
         'type': 'hdlr',
+        'headerOffset': 36,
+        'dataOffset': 48,
         'fullBoxInt32': 0,
+        'parent': 'meta',
         'depth': 2
       },
       {
         'boxSize': 14,
         'dataSize': 2,
         'type': 'pitm',
+        'headerOffset': 69,
+        'dataOffset': 81,
         'fullBoxInt32': 0,
+        'parent': 'meta',
         'depth': 2
       },
       {
         'boxSize': 52,
         'dataSize': 40,
         'type': 'iloc',
+        'headerOffset': 83,
+        'dataOffset': 95,
         'fullBoxInt32': 0,
+        'parent': 'meta',
         'depth': 2
       },
       {
         'boxSize': 76,
         'dataSize': 64,
         'type': 'iinf',
+        'headerOffset': 135,
+        'dataOffset': 147,
         'fullBoxInt32': 0,
+        'parent': 'meta',
         'depth': 2
       },
       {
         'boxSize': 26,
         'dataSize': 14,
         'type': 'iref',
+        'headerOffset': 211,
+        'dataOffset': 223,
         'fullBoxInt32': 0,
+        'parent': 'meta',
         'depth': 2
       },
-      {'boxSize': 14, 'dataSize': 6, 'type': 'thmb', 'depth': 3},
-      {'boxSize': 297, 'dataSize': 289, 'type': 'iprp', 'depth': 2},
-      {'boxSize': 263, 'dataSize': 255, 'type': 'ipco', 'depth': 3},
-      {'boxSize': 108, 'dataSize': 100, 'type': 'hvcC', 'depth': 4},
-      {'boxSize': 20, 'dataSize': 12, 'type': 'ispe', 'depth': 4},
-      {'boxSize': 107, 'dataSize': 99, 'type': 'hvcC', 'depth': 4},
-      {'boxSize': 20, 'dataSize': 12, 'type': 'ispe', 'depth': 4},
-      {'boxSize': 26, 'dataSize': 18, 'type': 'ipma', 'depth': 3},
-      {'boxSize': 293074, 'dataSize': 293066, 'type': 'mdat', 'depth': 1}
+      {
+        'boxSize': 14,
+        'dataSize': 6,
+        'type': 'thmb',
+        'headerOffset': 223,
+        'dataOffset': 231,
+        'parent': 'iref',
+        'depth': 3
+      },
+      {
+        'boxSize': 297,
+        'dataSize': 289,
+        'type': 'iprp',
+        'headerOffset': 237,
+        'dataOffset': 245,
+        'parent': 'meta',
+        'depth': 2
+      },
+      {
+        'boxSize': 263,
+        'dataSize': 255,
+        'type': 'ipco',
+        'headerOffset': 245,
+        'dataOffset': 253,
+        'parent': 'iprp',
+        'depth': 3
+      },
+      {
+        'boxSize': 108,
+        'dataSize': 100,
+        'type': 'hvcC',
+        'headerOffset': 253,
+        'dataOffset': 261,
+        'parent': 'ipco',
+        'depth': 4
+      },
+      {
+        'boxSize': 20,
+        'dataSize': 12,
+        'type': 'ispe',
+        'headerOffset': 361,
+        'dataOffset': 369,
+        'parent': 'ipco',
+        'depth': 4
+      },
+      {
+        'boxSize': 107,
+        'dataSize': 99,
+        'type': 'hvcC',
+        'headerOffset': 381,
+        'dataOffset': 389,
+        'parent': 'ipco',
+        'depth': 4
+      },
+      {
+        'boxSize': 20,
+        'dataSize': 12,
+        'type': 'ispe',
+        'headerOffset': 488,
+        'dataOffset': 496,
+        'parent': 'ipco',
+        'depth': 4
+      },
+      {
+        'boxSize': 26,
+        'dataSize': 18,
+        'type': 'ipma',
+        'headerOffset': 508,
+        'dataOffset': 516,
+        'parent': 'iprp',
+        'depth': 3
+      },
+      {
+        'boxSize': 293074,
+        'dataSize': 293066,
+        'type': 'mdat',
+        'headerOffset': 534,
+        'dataOffset': 542,
+        'depth': 1
+      }
+    ]);
+    await fileBox.close();
+  });
+
+  test('Callback (early exit)', () async {
+    final list = <Object>[];
+    final fileBox = await ISOFileBox.open('./test/test_files/a.heic');
+    await inspectISOBox(fileBox, callback: (box, depth) {
+      final dict = box.toDict();
+      dict['depth'] = depth;
+      list.add(dict);
+      if (box.type == 'meta') {
+        return false;
+      }
+      return true;
+    });
+    expect(list, [
+      {
+        'boxSize': 24,
+        'dataSize': 16,
+        'type': 'ftyp',
+        'headerOffset': 0,
+        'dataOffset': 8,
+        'depth': 1
+      },
+      {
+        'boxSize': 510,
+        'dataSize': 498,
+        'type': 'meta',
+        'headerOffset': 24,
+        'dataOffset': 36,
+        'fullBoxInt32': 0,
+        'depth': 1
+      },
+      {
+        'boxSize': 293074,
+        'dataSize': 293066,
+        'type': 'mdat',
+        'headerOffset': 534,
+        'dataOffset': 542,
+        'depth': 1
+      }
     ]);
     await fileBox.close();
   });
@@ -607,6 +745,7 @@ void main() {
         final data = await box.extractData();
         s += '${uint8ListToHex(data)}|';
       }
+      return true;
     });
     await fileBox.close();
     expect(s,
