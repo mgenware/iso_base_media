@@ -1,3 +1,7 @@
+## 2.2.0
+
+- Add `seek` method to all box types.
+
 ## 2.1.1
 
 - Update extension methods.

@@ -152,6 +152,9 @@ abstract class ISOBoxBase {
   Future<ISOBox?> nextChild(
       {required bool Function(String type, ISOBox? parent)?
           isContainerCallback});
+
+  /// Seeks to a specific offset in the file.
+  Future<void> seek(int offset);
 }
 
 /// Represents the full box info.
@@ -238,6 +241,13 @@ class ISOBox implements ISOBoxBase {
   }
 
   @override
+  Future<void> seek(int offset) async {
+    offset = dataOffset + offset;
+    await _file.setPosition(offset);
+    _currentOffset = offset;
+  }
+
+  @override
   String toString() {
     return toDict().toString();
   }
@@ -315,6 +325,12 @@ class ISOFileBox implements ISOBoxBase {
     final box = await _readChildBox(this, _file, isContainerCallback);
     _offset = await _file.position();
     return box;
+  }
+
+  @override
+  Future<void> seek(int offset) async {
+    await _file.setPosition(offset);
+    _offset = offset;
   }
 }
 

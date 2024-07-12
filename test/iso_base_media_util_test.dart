@@ -77,4 +77,36 @@ void main() {
         .getChildByTypePath(['meta__', 'iinf__'], isContainerCallback: null);
     expect(match, null);
   });
+
+  test('rootBox.seek', () async {
+    final root = await _openFile('a.heic');
+    await root
+        .getDirectChildByTypes({'ftyp', 'meta'}, isContainerCallback: null);
+    await root.seek(0);
+    final firstMatch = await root
+        .getDirectChildByTypes({'ftyp', 'meta'}, isContainerCallback: null);
+    expect(firstMatch!.toDict(), {
+      'boxSize': 24,
+      'dataSize': 16,
+      'type': 'ftyp',
+      'headerOffset': 0,
+      'dataOffset': 8
+    });
+  });
+
+  test('childBox.seek', () async {
+    final root = await _openFile('a.heic');
+    final meta =
+        await root.getDirectChildByTypes({'meta'}, isContainerCallback: null);
+    final match1 =
+        await meta!.getDirectChildByTypes({'iinf'}, isContainerCallback: null);
+    final dict1 = match1!.toDict();
+
+    await meta.seek(0);
+    final match2 =
+        await meta.getDirectChildByTypes({'iinf'}, isContainerCallback: null);
+    final dict2 = match2!.toDict();
+
+    expect(dict1, dict2);
+  });
 }
