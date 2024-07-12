@@ -1,3 +1,10 @@
+## 2.0.0
+
+- Allow customizing container boxes via ``isContainerCallback`.
+- Allow early exit in `inspectISOBox.callback`.
+- Return a map in `inspectISOBox` instead of a list.
+- Add `grpl` to container boxes.
+
 ## 1.5.0
 
 - Add some helper functions to work with boxes.
