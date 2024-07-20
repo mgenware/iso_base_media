@@ -1,7 +1,7 @@
 # iso_base_media
 
 [![pub package](https://img.shields.io/pub/v/iso_base_media.svg)](https://pub.dev/packages/iso_base_media)
-[![Build Status](https://github.com/mgenware/iso_base_media/workflows/Build/badge.svg)](https://github.com/mgenware/iso_base_media/actions)
+[![Build Status](https://github.com/mgenware/iso_base_media/workflows/Dart/badge.svg)](https://github.com/mgenware/iso_base_media/actions)
 
 A dart package to parse ISO Base Media File Format and MP4 files.
 
