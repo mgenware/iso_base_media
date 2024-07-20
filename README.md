@@ -208,11 +208,14 @@ final fileBox = await ISOFileBox.openRandomAccessFile(someRandomAccessFile);
 // It's now user's responsibility to close the random access file.
 ```
 
-### Determine what boxes are containers
+### Determine what boxes are containers and full boxes
 
-You probably noticed that all the examples above has `isContainerCallback: null`. When `isContainerCallback` is `null`, this package uses a default set of rules to determine if a box is a container. **If you are doing anything serious, you should provide your own `isContainerCallback`**.
+This package comes with a default set of rules to determine if a box is a container or a full box. You can provide your own rules via `isContainerCallback` and `isFullBoxCallback`.
 
-`isContainerCallback` has 2 parameters: `type` and `parent`. `type` is the box type, `parent` is the parent box. If `parent` is `null`, it means the box is the root box.
+Both `isContainerCallback` and `isFullBoxCallback` have 2 parameters:
+
+- `type` is the box type
+- `parent` is the parent box. If `parent` is `null`, it means the box is the root box.
 
 ```dart
 isContainerCallback: (type, parent) {

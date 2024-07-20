@@ -842,6 +842,25 @@ void main() {
     await fileBox.close();
   });
 
+  test('isFullBoxCallback', () async {
+    final fileBox = await ISOFileBox.open('./test/test_files/a.mp4');
+    final moov = await fileBox
+        .getDirectChildByTypes({'moov'}, isContainerCallback: null);
+    final mvhd = await moov!.getDirectChildByTypes({'mvhd'},
+        isContainerCallback: null, isFullBoxCallback: (type, parent) {
+      return type == 'mvhd';
+    });
+    expect(mvhd!.toDict(), {
+      'boxSize': 108,
+      'dataSize': 96,
+      'type': 'mvhd',
+      'headerOffset': 235800,
+      'dataOffset': 235812,
+      'fullBoxInt32': 0,
+      'parent': 'moov'
+    });
+  });
+
   test('Extract data', () async {
     final fileBox = await ISOFileBox.open('./test/test_files/a.heic');
     var s = '';

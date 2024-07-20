@@ -90,8 +90,12 @@ bool _checkIsContainerBox(String type, ISOBoxBase parent,
       : _containerBoxes.contains(type);
 }
 
-Future<ISOBox?> _readChildBox(ISOBoxBase parent, RandomAccessFile file,
-    bool Function(String type, ISOBox? parent)? isContainerCallback) async {
+Future<ISOBox?> _readChildBox(
+  ISOBoxBase parent,
+  RandomAccessFile file,
+  bool Function(String type, ISOBox? parent)? isContainerCallback,
+  bool Function(String type, ISOBox? parent)? isFullBoxCallback,
+) async {
   final headerOffset = await file.position();
   final sizeBuffer = await file.read(4);
   if (sizeBuffer.length < 4) {
@@ -125,7 +129,9 @@ Future<ISOBox?> _readChildBox(ISOBoxBase parent, RandomAccessFile file,
         await file.length() - await file.position() + 4 /* Size bytes size */;
   }
 
-  final fullBox = _fullBoxes.contains(type);
+  final fullBox = isFullBoxCallback != null
+      ? isFullBoxCallback(type, parent is ISOBox ? parent : null)
+      : _fullBoxes.contains(type);
   final isContainer = _checkIsContainerBox(type, parent, isContainerCallback);
 
   int? fullBoxInt32;
@@ -149,9 +155,11 @@ Future<ISOBox?> _readChildBox(ISOBoxBase parent, RandomAccessFile file,
 abstract class ISOBoxBase {
   /// Returns the next child box.
   /// [isContainerCallback] is a function that returns whether a box is a container.
-  Future<ISOBox?> nextChild(
-      {required bool Function(String type, ISOBox? parent)?
-          isContainerCallback});
+  /// [isFullBoxCallback] is a function that returns whether a box is a full box.
+  Future<ISOBox?> nextChild({
+    required bool Function(String type, ISOBox? parent)? isContainerCallback,
+    bool Function(String type, ISOBox? parent)? isFullBoxCallback,
+  });
 
   /// Seeks to a specific offset in the file.
   Future<void> seek(int offset);
@@ -225,9 +233,10 @@ class ISOBox implements ISOBoxBase {
   }
 
   @override
-  Future<ISOBox?> nextChild(
-      {required bool Function(String type, ISOBox? parent)?
-          isContainerCallback}) async {
+  Future<ISOBox?> nextChild({
+    required bool Function(String type, ISOBox? parent)? isContainerCallback,
+    bool Function(String type, ISOBox? parent)? isFullBoxCallback,
+  }) async {
     if (!isContainer) {
       return null;
     }
@@ -235,7 +244,8 @@ class ISOBox implements ISOBoxBase {
       return null;
     }
     await _file.setPosition(_currentOffset);
-    final box = await _readChildBox(this, _file, isContainerCallback);
+    final box = await _readChildBox(
+        this, _file, isContainerCallback, isFullBoxCallback);
     _currentOffset = await _file.position();
     return box;
   }
@@ -318,11 +328,13 @@ class ISOFileBox implements ISOBoxBase {
   }
 
   @override
-  Future<ISOBox?> nextChild(
-      {required bool Function(String type, ISOBox? parent)?
-          isContainerCallback}) async {
+  Future<ISOBox?> nextChild({
+    required bool Function(String type, ISOBox? parent)? isContainerCallback,
+    bool Function(String type, ISOBox? parent)? isFullBoxCallback,
+  }) async {
     await _file.setPosition(_offset);
-    final box = await _readChildBox(this, _file, isContainerCallback);
+    final box = await _readChildBox(
+        this, _file, isContainerCallback, isFullBoxCallback);
     _offset = await _file.position();
     return box;
   }

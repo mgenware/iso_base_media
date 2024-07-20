@@ -1,3 +1,7 @@
+## Unreleased
+
+- Add `isFullBoxCallback`.
+
 ## 2.2.0
 
 - Add `seek` method to all box types.
