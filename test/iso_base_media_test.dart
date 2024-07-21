@@ -5,18 +5,19 @@ import 'package:iso_base_media/iso_base_media.dart';
 import 'package:test/test.dart';
 
 Future<void> testFile(String fileName, Map<String, dynamic> expected,
-    {RandomAccessFile? raf}) async {
-  ISOFileBox fileBox;
-  if (raf != null) {
-    fileBox = await ISOFileBox.openRandomAccessFile(raf);
-    expect(fileBox.canClose, isFalse);
+    {bool? readBytes}) async {
+  ISOSourceBox srcBox;
+  final path = './test/test_files/$fileName';
+  RandomAccessFile? raf;
+  if (readBytes == true) {
+    srcBox = ISOSourceBox.fromBytes(await File(path).readAsBytes());
   } else {
-    fileBox = await ISOFileBox.open('./test/test_files/$fileName');
-    expect(fileBox.canClose, isTrue);
+    raf = await File(path).open();
+    srcBox = ISOSourceBox.fromRandomAccessFile(raf);
   }
-  final actual = await inspectISOBox(fileBox, isContainerCallback: null);
+  final actual = await inspectISOBox(srcBox);
   expect(actual, expected);
-  await fileBox.close();
+  await raf?.close();
 }
 
 String uint8ListToHex(Uint8List bytes) {
@@ -534,11 +535,161 @@ void main() {
     });
   });
 
+  test('Byte source', () async {
+    await testFile(
+        'a.heic',
+        {
+          'root': true,
+          'children': [
+            {
+              'boxSize': 24,
+              'dataSize': 16,
+              'type': 'ftyp',
+              'headerOffset': 0,
+              'dataOffset': 8
+            },
+            {
+              'boxSize': 510,
+              'dataSize': 498,
+              'type': 'meta',
+              'headerOffset': 24,
+              'dataOffset': 36,
+              'fullBoxInt32': 0,
+              'children': [
+                {
+                  'boxSize': 33,
+                  'dataSize': 21,
+                  'type': 'hdlr',
+                  'headerOffset': 36,
+                  'dataOffset': 48,
+                  'fullBoxInt32': 0,
+                  'parent': 'meta'
+                },
+                {
+                  'boxSize': 14,
+                  'dataSize': 2,
+                  'type': 'pitm',
+                  'headerOffset': 69,
+                  'dataOffset': 81,
+                  'fullBoxInt32': 0,
+                  'parent': 'meta'
+                },
+                {
+                  'boxSize': 52,
+                  'dataSize': 40,
+                  'type': 'iloc',
+                  'headerOffset': 83,
+                  'dataOffset': 95,
+                  'fullBoxInt32': 0,
+                  'parent': 'meta'
+                },
+                {
+                  'boxSize': 76,
+                  'dataSize': 64,
+                  'type': 'iinf',
+                  'headerOffset': 135,
+                  'dataOffset': 147,
+                  'fullBoxInt32': 0,
+                  'parent': 'meta'
+                },
+                {
+                  'boxSize': 26,
+                  'dataSize': 14,
+                  'type': 'iref',
+                  'headerOffset': 211,
+                  'dataOffset': 223,
+                  'fullBoxInt32': 0,
+                  'parent': 'meta',
+                  'children': [
+                    {
+                      'boxSize': 14,
+                      'dataSize': 6,
+                      'type': 'thmb',
+                      'headerOffset': 223,
+                      'dataOffset': 231,
+                      'parent': 'iref'
+                    }
+                  ]
+                },
+                {
+                  'boxSize': 297,
+                  'dataSize': 289,
+                  'type': 'iprp',
+                  'headerOffset': 237,
+                  'dataOffset': 245,
+                  'parent': 'meta',
+                  'children': [
+                    {
+                      'boxSize': 263,
+                      'dataSize': 255,
+                      'type': 'ipco',
+                      'headerOffset': 245,
+                      'dataOffset': 253,
+                      'parent': 'iprp',
+                      'children': [
+                        {
+                          'boxSize': 108,
+                          'dataSize': 100,
+                          'type': 'hvcC',
+                          'headerOffset': 253,
+                          'dataOffset': 261,
+                          'parent': 'ipco'
+                        },
+                        {
+                          'boxSize': 20,
+                          'dataSize': 12,
+                          'type': 'ispe',
+                          'headerOffset': 361,
+                          'dataOffset': 369,
+                          'parent': 'ipco'
+                        },
+                        {
+                          'boxSize': 107,
+                          'dataSize': 99,
+                          'type': 'hvcC',
+                          'headerOffset': 381,
+                          'dataOffset': 389,
+                          'parent': 'ipco'
+                        },
+                        {
+                          'boxSize': 20,
+                          'dataSize': 12,
+                          'type': 'ispe',
+                          'headerOffset': 488,
+                          'dataOffset': 496,
+                          'parent': 'ipco'
+                        }
+                      ]
+                    },
+                    {
+                      'boxSize': 26,
+                      'dataSize': 18,
+                      'type': 'ipma',
+                      'headerOffset': 508,
+                      'dataOffset': 516,
+                      'parent': 'iprp'
+                    }
+                  ]
+                }
+              ]
+            },
+            {
+              'boxSize': 293074,
+              'dataSize': 293066,
+              'type': 'mdat',
+              'headerOffset': 534,
+              'dataOffset': 542
+            }
+          ]
+        },
+        readBytes: true);
+  });
+
   test('Callback', () async {
     final list = <Object>[];
-    final fileBox = await ISOFileBox.open('./test/test_files/a.heic');
-    await inspectISOBox(fileBox, isContainerCallback: null,
-        callback: (box, depth) {
+    final raf = await File('./test/test_files/a.heic').open();
+    final fileBox = ISOSourceBox.fromRandomAccessFile(raf);
+    await inspectISOBox(fileBox, callback: (box, depth) {
       final dict = box.toDict();
       dict['depth'] = depth;
       list.add(dict);
@@ -693,14 +844,14 @@ void main() {
         'depth': 1
       }
     ]);
-    await fileBox.close();
+    await raf.close();
   });
 
   test('Callback (early exit)', () async {
     final list = <Object>[];
-    final fileBox = await ISOFileBox.open('./test/test_files/a.heic');
-    await inspectISOBox(fileBox, isContainerCallback: null,
-        callback: (box, depth) {
+    final raf = await File('./test/test_files/a.heic').open();
+    final fileBox = ISOSourceBox.fromRandomAccessFile(raf);
+    await inspectISOBox(fileBox, callback: (box, depth) {
       final dict = box.toDict();
       dict['depth'] = depth;
       list.add(dict);
@@ -736,12 +887,13 @@ void main() {
         'depth': 1
       }
     ]);
-    await fileBox.close();
+    await raf.close();
   });
 
   test('Callback (isContainerCallback)', () async {
     final list = <Object>[];
-    final fileBox = await ISOFileBox.open('./test/test_files/a.heic');
+    final raf = await File('./test/test_files/a.heic').open();
+    final fileBox = ISOSourceBox.fromRandomAccessFile(raf);
     await inspectISOBox(fileBox, isContainerCallback: (type, parent) {
       if (type == 'meta' && parent == null) {
         return true;
@@ -839,15 +991,15 @@ void main() {
         'depth': 1
       }
     ]);
-    await fileBox.close();
+    await raf.close();
   });
 
   test('isFullBoxCallback', () async {
-    final fileBox = await ISOFileBox.open('./test/test_files/a.mp4');
-    final moov = await fileBox
-        .getDirectChildByTypes({'moov'}, isContainerCallback: null);
+    final raf = await File('./test/test_files/a.mp4').open();
+    final fileBox = ISOSourceBox.fromRandomAccessFile(raf);
+    final moov = await fileBox.getDirectChildByTypes({'moov'});
     final mvhd = await moov!.getDirectChildByTypes({'mvhd'},
-        isContainerCallback: null, isFullBoxCallback: (type, parent) {
+        isFullBoxCallback: (type, parent) {
       return type == 'mvhd';
     });
     expect(mvhd!.toDict(), {
@@ -859,21 +1011,22 @@ void main() {
       'fullBoxInt32': 0,
       'parent': 'moov'
     });
+    await raf.close();
   });
 
   test('Extract data', () async {
-    final fileBox = await ISOFileBox.open('./test/test_files/a.heic');
+    final raf = await File('./test/test_files/a.heic').open();
+    final fileBox = ISOSourceBox.fromRandomAccessFile(raf);
     var s = '';
-    await inspectISOBox(fileBox, isContainerCallback: null,
-        callback: (box, depth) async {
+    await inspectISOBox(fileBox, callback: (box, depth) async {
       if (box.type == 'ispe') {
         final data = await box.extractData();
         s += '${uint8ListToHex(data)}|';
       }
       return true;
     });
-    await fileBox.close();
     expect(s,
         'bytes(12): 00 00 00 00 00 00 05 a0 00 00 03 c0 |bytes(12): 00 00 00 00 00 00 00 f0 00 00 00 a0 |');
+    await raf.close();
   });
 }

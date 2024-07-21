@@ -1,5 +1,6 @@
-## Unreleased
+## 3.0.0
 
+- [Breaking] Remove `ISORootBox` in favor of `ISOSourceBox`.
 - Add `isFullBoxCallback`.
 
 ## 2.2.0

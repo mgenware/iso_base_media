@@ -11,8 +11,8 @@ A dart package to parse ISO Base Media File Format and MP4 files.
 
 ```dart
 Future<void> inspect() async {
-  final fileBox = await ISOFileBox.open('./test/test_files/a.heic');
-  final s = await inspectISOBox(fileBox, isContainerCallback: null);
+  final fileBox = await ISOSourceBox.openFilePath('./test/test_files/a.heic');
+  final s = await inspectISOBox(fileBox);
   await fileBox.close();
   print(s);
 }
@@ -168,11 +168,11 @@ Future<void> inspect() async {
 
 ```dart
 Future<void> extract() async {
-  final fileBox = await ISOFileBox.open('./test/test_files/a.heic');
+  final fileBox = await ISOSourceBox.openFilePath('./test/test_files/a.heic');
   var s = '';
 
   // Find all 'ispe' boxes.
-  await inspectISOBox(fileBox, isContainerCallback: null, callback: (box, depth) async {
+  await inspectISOBox(fileBox, callback: (box, depth) async {
     if (box.type == 'ispe') {
       final data = await box.extractData();
       s += '${uint8ListToHex(data)}\n';
@@ -201,14 +201,14 @@ bytes(12): 00 00 00 00 00 00 00 f0 00 00 00 a0
 */
 ```
 
-### Start parsing from a `RandomAccessFile`
+### Create a `ISOSourceBox`
 
-```dart
-final fileBox = await ISOFileBox.openRandomAccessFile(someRandomAccessFile);
-// It's now user's responsibility to close the random access file.
-```
+- `openFilePath` from a file path
+- `openFile` from a file
+- `fromRandomAccessFile` from a `RandomAccessFile`
+- `fromBytes` from a `Uint8List`
 
-### Determine what boxes are containers and full boxes
+### Determine which boxes are containers or full boxes
 
 This package comes with a default set of rules to determine if a box is a container or a full box. You can provide your own rules via `isContainerCallback` and `isFullBoxCallback`.
 
@@ -218,13 +218,13 @@ Both `isContainerCallback` and `isFullBoxCallback` have 2 parameters:
 - `parent` is the parent box. If `parent` is `null`, it means the box is the root box.
 
 ```dart
-isContainerCallback: (type, parent) {
-  // Only root `meta` box is a container.
+await inspectISOBox(fileBox, isContainerCallback: (type, parent) {
+  // Only root `meta` box is considered a container here.
   if (type == 'meta' && parent == null) {
     return true;
   }
   return false;
-}
+});
 ```
 
 ### Extension methods
@@ -232,18 +232,32 @@ isContainerCallback: (type, parent) {
 The base box class has a few extension methods:
 
 ```dart
-/// Returns a direct child box by given types.
-Future<ISOBox?> getDirectChildByTypes(Set<String> types,
-    {required bool Function(String type, ISOBox? parent)?
-        isContainerCallback});
+  /// Returns a direct child box by given types.
+  /// An empty [types] set will return the first child box.
+  /// [isContainerCallback] is a callback to determine if a box is a container.
+  /// [isFullBoxCallback] is a callback to determine if a box is a full box.
+  Future<ISOBox?> getDirectChildByTypes(
+    Set<String> types, {
+    bool Function(String type, ISOBox? parent)? isContainerCallback,
+    bool Function(String type, ISOBox? parent)? isFullBoxCallback,
+  });
 
-/// Returns a list of direct children by given types.
-Future<List<ISOBox>> getDirectChildrenByTypes(Set<String> types,
-    {required bool Function(String type, ISOBox? parent)?
-        isContainerCallback});
+  /// Returns a list of direct children by given types.
+  /// An empty [types] set will return all child boxes.
+  /// [isContainerCallback] is a callback to determine if a box is a container.
+  /// [isFullBoxCallback] is a callback to determine if a box is a full box.
+  Future<List<ISOBox>> getDirectChildrenByTypes(
+    Set<String> types, {
+    bool Function(String type, ISOBox? parent)? isContainerCallback,
+    bool Function(String type, ISOBox? parent)? isFullBoxCallback,
+  });
 
-/// Returns a child box by a given type path.
-Future<ISOBox?> getChildByTypePath(List<String> path,
-    {required bool Function(String type, ISOBox? parent)?
-        isContainerCallback});
+  /// Returns a child box by a given type path.
+  /// [isContainerCallback] is a callback to determine if a box is a container.
+  /// [isFullBoxCallback] is a callback to determine if a box is a full box.
+  Future<ISOBox?> getChildByTypePath(
+    List<String> path, {
+    bool Function(String type, ISOBox? parent)? isContainerCallback,
+    bool Function(String type, ISOBox? parent)? isFullBoxCallback,
+  });
 ```

@@ -2,6 +2,8 @@ import 'dart:async';
 import 'dart:io';
 import 'dart:typed_data';
 
+import 'package:random_access_source/random_access_source.dart';
+
 const _containerBoxes = {
   'moov',
   'trak',
@@ -92,18 +94,18 @@ bool _checkIsContainerBox(String type, ISOBoxBase parent,
 
 Future<ISOBox?> _readChildBox(
   ISOBoxBase parent,
-  RandomAccessFile file,
+  RandomAccessSource src,
   bool Function(String type, ISOBox? parent)? isContainerCallback,
   bool Function(String type, ISOBox? parent)? isFullBoxCallback,
 ) async {
-  final headerOffset = await file.position();
-  final sizeBuffer = await file.read(4);
+  final headerOffset = await src.position();
+  final sizeBuffer = await src.read(4);
   if (sizeBuffer.length < 4) {
     return null;
   }
   var boxSize = sizeBuffer.buffer.asByteData().getUint32(0);
 
-  final typeBuffer = await file.read(4);
+  final typeBuffer = await src.read(4);
   if (typeBuffer.length < 4) {
     return null;
   }
@@ -119,14 +121,14 @@ Future<ISOBox?> _readChildBox(
     of the file.
   */
   if (boxSize == 1) {
-    final largeSizeBuffer = await file.read(8);
+    final largeSizeBuffer = await src.read(8);
     if (largeSizeBuffer.length < 8) {
       return null;
     }
     boxSize = largeSizeBuffer.buffer.asByteData().getUint64(0);
   } else if (boxSize == 0) {
     boxSize =
-        await file.length() - await file.position() + 4 /* Size bytes size */;
+        await src.length() - await src.position() + 4 /* Size bytes size */;
   }
 
   final fullBox = isFullBoxCallback != null
@@ -136,18 +138,18 @@ Future<ISOBox?> _readChildBox(
 
   int? fullBoxInt32;
   if (fullBox) {
-    final fullBoxInt32Buffer = await file.read(4);
+    final fullBoxInt32Buffer = await src.read(4);
     if (fullBoxInt32Buffer.length < 4) {
       return null;
     }
     fullBoxInt32 = fullBoxInt32Buffer.buffer.asByteData().getUint32(0);
   }
 
-  final dataOffset = await file.position();
-  final box = ISOBox(parent, boxSize, type, isContainer, file, headerOffset,
+  final dataOffset = await src.position();
+  final box = ISOBox(parent, boxSize, type, isContainer, src, headerOffset,
       dataOffset, fullBoxInt32);
 
-  await file.setPosition(dataOffset + box.dataSize);
+  await src.setPosition(dataOffset + box.dataSize);
   return box;
 }
 
@@ -157,7 +159,7 @@ abstract class ISOBoxBase {
   /// [isContainerCallback] is a function that returns whether a box is a container.
   /// [isFullBoxCallback] is a function that returns whether a box is a full box.
   Future<ISOBox?> nextChild({
-    required bool Function(String type, ISOBox? parent)? isContainerCallback,
+    bool Function(String type, ISOBox? parent)? isContainerCallback,
     bool Function(String type, ISOBox? parent)? isFullBoxCallback,
   });
 
@@ -201,8 +203,8 @@ class ISOBox implements ISOBoxBase {
   /// The type of the box.
   final String type;
 
-  /// The file where the box is located.
-  final RandomAccessFile _file;
+  /// The source where the box is located.
+  final RandomAccessSource _src;
 
   /// Whether the box is a container.
   final bool isContainer;
@@ -224,7 +226,7 @@ class ISOBox implements ISOBoxBase {
     this.boxSize,
     this.type,
     this.isContainer,
-    this._file,
+    this._src,
     this.headerOffset,
     this.dataOffset,
     this.fullBoxInt32,
@@ -234,7 +236,7 @@ class ISOBox implements ISOBoxBase {
 
   @override
   Future<ISOBox?> nextChild({
-    required bool Function(String type, ISOBox? parent)? isContainerCallback,
+    bool Function(String type, ISOBox? parent)? isContainerCallback,
     bool Function(String type, ISOBox? parent)? isFullBoxCallback,
   }) async {
     if (!isContainer) {
@@ -243,17 +245,17 @@ class ISOBox implements ISOBoxBase {
     if (_currentOffset - dataOffset >= dataSize) {
       return null;
     }
-    await _file.setPosition(_currentOffset);
-    final box = await _readChildBox(
-        this, _file, isContainerCallback, isFullBoxCallback);
-    _currentOffset = await _file.position();
+    await _src.setPosition(_currentOffset);
+    final box =
+        await _readChildBox(this, _src, isContainerCallback, isFullBoxCallback);
+    _currentOffset = await _src.position();
     return box;
   }
 
   @override
   Future<void> seek(int offset) async {
     offset = dataOffset + offset;
-    await _file.setPosition(offset);
+    await _src.setPosition(offset);
     _currentOffset = offset;
   }
 
@@ -282,8 +284,8 @@ class ISOBox implements ISOBoxBase {
 
   /// Extracts the data from the box.
   Future<Uint8List> extractData() async {
-    await _file.setPosition(dataOffset);
-    return await _file.read(dataSize);
+    await _src.setPosition(dataOffset);
+    return await _src.read(dataSize);
   }
 
   /// Returns the full box info.
@@ -297,52 +299,55 @@ class ISOBox implements ISOBoxBase {
   }
 }
 
-/// Can be used to read ISO boxes from a file.
-class ISOFileBox implements ISOBoxBase {
-  /// Whether the internal random access file can be closed.
-  /// If false, the user is responsible for closing the internal file.
-  /// This is true when file box is created using [open] method.
-  /// And false when created using [openRandomAccessFile] method.
-  final bool canClose;
-
-  final RandomAccessFile _file;
+/// Can be used to read ISO boxes from a random access source.
+class ISOSourceBox implements ISOBoxBase {
+  final RandomAccessSource _src;
   int _offset = 0;
 
-  ISOFileBox._(this._file, this._offset, this.canClose);
+  ISOSourceBox._(this._src, this._offset);
 
-  /// Opens a file and returns an instance of [ISOFileBox].
-  static Future<ISOFileBox> open(String filePath) async {
-    final raf = await File(filePath).open();
-    return ISOFileBox._(raf, 0, true);
+  /// Creates an instance from a random access file.
+  static ISOSourceBox fromRandomAccessFile(RandomAccessFile file) {
+    return ISOSourceBox._(RandomAccessFileRASource(file), 0);
   }
 
-  static Future<ISOFileBox> openRandomAccessFile(RandomAccessFile raf) async {
-    return ISOFileBox._(raf, await raf.position(), false);
+  /// Creates an instance from a byte list.
+  static ISOSourceBox fromBytes(Uint8List bytes) {
+    return ISOSourceBox._(BytesRASource(bytes), 0);
   }
 
-  /// Closes the file.
-  Future<void> close() async {
-    if (canClose) {
-      await _file.close();
-    }
+  /// Creates an instance from a file.
+  static Future<ISOSourceBox> openFile(File file) async {
+    final raf = await file.open();
+    return ISOSourceBox.fromRandomAccessFile(raf);
+  }
+
+  /// Creates an instance from a file path.
+  static Future<ISOSourceBox> openFilePath(String path) async {
+    return openFile(File(path));
   }
 
   @override
   Future<ISOBox?> nextChild({
-    required bool Function(String type, ISOBox? parent)? isContainerCallback,
+    bool Function(String type, ISOBox? parent)? isContainerCallback,
     bool Function(String type, ISOBox? parent)? isFullBoxCallback,
   }) async {
-    await _file.setPosition(_offset);
-    final box = await _readChildBox(
-        this, _file, isContainerCallback, isFullBoxCallback);
-    _offset = await _file.position();
+    await _src.setPosition(_offset);
+    final box =
+        await _readChildBox(this, _src, isContainerCallback, isFullBoxCallback);
+    _offset = await _src.position();
     return box;
   }
 
   @override
   Future<void> seek(int offset) async {
-    await _file.setPosition(offset);
+    await _src.setPosition(offset);
     _offset = offset;
+  }
+
+  /// Closes the source.
+  Future<void> close() {
+    return _src.close();
   }
 }
 
@@ -350,7 +355,8 @@ Future<Map<String, dynamic>?> _inspectISOBox(
   ISOBoxBase box,
   int depth, {
   required bool Function(String type, ISOBox? parent)? isContainerCallback,
-  FutureOr<bool> Function(ISOBox box, int depth)? callback,
+  required bool Function(String type, ISOBox? parent)? isFullBoxCallback,
+  required FutureOr<bool> Function(ISOBox box, int depth)? callback,
 }) async {
   Map<String, dynamic>? dict;
   if (callback == null) {
@@ -371,10 +377,14 @@ Future<Map<String, dynamic>?> _inspectISOBox(
   ISOBox? child;
   final childDicts = <Map<String, dynamic>>[];
   do {
-    child = await box.nextChild(isContainerCallback: isContainerCallback);
+    child = await box.nextChild(
+        isContainerCallback: isContainerCallback,
+        isFullBoxCallback: isFullBoxCallback);
     if (child != null) {
       final childInspection = await _inspectISOBox(child, depth + 1,
-          callback: callback, isContainerCallback: isContainerCallback);
+          callback: callback,
+          isContainerCallback: isContainerCallback,
+          isFullBoxCallback: isFullBoxCallback);
       if (callback == null && childInspection != null) {
         childDicts.add(childInspection);
       }
@@ -393,13 +403,15 @@ Future<Map<String, dynamic>?> _inspectISOBox(
 /// inspected.
 Future<Map<String, dynamic>?> inspectISOBox(
   ISOBoxBase box, {
-  required bool Function(String type, ISOBox? parent)? isContainerCallback,
+  bool Function(String type, ISOBox? parent)? isContainerCallback,
+  bool Function(String type, ISOBox? parent)? isFullBoxCallback,
   FutureOr<bool> Function(ISOBox box, int depth)? callback,
 }) async {
   return _inspectISOBox(
     box,
     0,
     isContainerCallback: isContainerCallback,
+    isFullBoxCallback: isFullBoxCallback,
     callback: callback,
   );
 }
