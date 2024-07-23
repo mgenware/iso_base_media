@@ -4,87 +4,6 @@ import 'dart:typed_data';
 
 import 'package:random_access_source/random_access_source.dart';
 
-const _containerBoxes = {
-  'moov',
-  'trak',
-  'mdia',
-  'minf',
-  'stbl',
-  'dinf',
-  'edts',
-  'udta',
-  'mvex',
-  'meta',
-  'iref',
-  'iprp',
-  'ipco',
-  'grpl',
-};
-
-const _fullBoxes = {
-  'pdin',
-  'mvhd',
-  'tkhd',
-  'trgr',
-  'mdhd',
-  'nmhd',
-  'stsd',
-  'stts',
-  'cslg',
-  'stss',
-  'stsh',
-  'sdtp',
-  'elst',
-  'dref',
-  'stsz',
-  'stz2',
-  'stsc',
-  'stco',
-  'co64',
-  'padb',
-  'subs',
-  'saiz',
-  'saio',
-  'mehd',
-  'tfhd',
-  'trun',
-  'tfra',
-  'mfro',
-  'tfdt',
-  'leva',
-  'trep',
-  'assp',
-  'sbgp',
-  'sgpd',
-  'cprt',
-  'tsel',
-  'kind',
-  'meta',
-  'xml ',
-  'bxml',
-  'iloc',
-  'pitm',
-  'ipro',
-  'iinf',
-  'mere',
-  'iref',
-  'schm',
-  'fiin',
-  'fpar',
-  'fecr',
-  'gitn',
-  'fire',
-  'stri',
-  'stsg',
-  'stvi',
-  'trex',
-  'hdlr',
-  'sidx',
-  'ssix',
-  'prft',
-  'auxC',
-};
-
 bool _checkIsContainerBox(String type, ISOBoxBase parent,
     bool Function(String type, ISOBox? parent)? isContainerCallback) {
   return isContainerCallback != null
@@ -259,6 +178,16 @@ class ISOBox implements ISOBoxBase {
     _currentOffset = offset;
   }
 
+  /// Returns the box as bytes. This includes the header and the data.
+  Future<Uint8List> toBytes() async {
+    final poz = await _src.position();
+    await _src.setPosition(headerOffset);
+    final header = await _src.read(headerSize);
+    final data = await _src.read(dataSize);
+    await _src.setPosition(poz);
+    return Uint8List.fromList(header + data);
+  }
+
   @override
   String toString() {
     return toDict().toString();
@@ -415,3 +344,84 @@ Future<Map<String, dynamic>?> inspectISOBox(
     callback: callback,
   );
 }
+
+const _containerBoxes = {
+  'moov',
+  'trak',
+  'mdia',
+  'minf',
+  'stbl',
+  'dinf',
+  'edts',
+  'udta',
+  'mvex',
+  'meta',
+  'iref',
+  'iprp',
+  'ipco',
+  'grpl',
+};
+
+const _fullBoxes = {
+  'pdin',
+  'mvhd',
+  'tkhd',
+  'trgr',
+  'mdhd',
+  'nmhd',
+  'stsd',
+  'stts',
+  'cslg',
+  'stss',
+  'stsh',
+  'sdtp',
+  'elst',
+  'dref',
+  'stsz',
+  'stz2',
+  'stsc',
+  'stco',
+  'co64',
+  'padb',
+  'subs',
+  'saiz',
+  'saio',
+  'mehd',
+  'tfhd',
+  'trun',
+  'tfra',
+  'mfro',
+  'tfdt',
+  'leva',
+  'trep',
+  'assp',
+  'sbgp',
+  'sgpd',
+  'cprt',
+  'tsel',
+  'kind',
+  'meta',
+  'xml ',
+  'bxml',
+  'iloc',
+  'pitm',
+  'ipro',
+  'iinf',
+  'mere',
+  'iref',
+  'schm',
+  'fiin',
+  'fpar',
+  'fecr',
+  'gitn',
+  'fire',
+  'stri',
+  'stsg',
+  'stvi',
+  'trex',
+  'hdlr',
+  'sidx',
+  'ssix',
+  'prft',
+  'auxC',
+};

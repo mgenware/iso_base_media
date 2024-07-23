@@ -1029,4 +1029,18 @@ void main() {
         'bytes(12): 00 00 00 00 00 00 05 a0 00 00 03 c0 |bytes(12): 00 00 00 00 00 00 00 f0 00 00 00 a0 |');
     await raf.close();
   });
+
+  test('toBytes', () async {
+    final raf = await File('./test/test_files/a.heic').open();
+    final fileBox = ISOSourceBox.fromRandomAccessFile(raf);
+    // Get all direct children.
+    final children = await fileBox.getDirectChildrenByTypes({});
+    final bb = BytesBuilder();
+    for (final child in children) {
+      bb.add(await child.toBytes());
+    }
+
+    expect(bb.toBytes(), await File('./test/test_files/a.heic').readAsBytes());
+    await raf.close();
+  });
 }
