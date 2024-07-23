@@ -140,7 +140,7 @@ void main() {
     final root = await _openFile('a.heic');
     final matches =
         await root.getDirectChildren(filter: (box) => box.type != 'mdat');
-    final bytes = await root.boxesToBytes(matches);
+    final bytes = await isoBoxesToBytes(matches);
 
     final newSource = ISOSourceBox.fromBytes(bytes);
     expect(await inspectISOBox(newSource), {

@@ -232,6 +232,7 @@ await inspectISOBox(fileBox, isContainerCallback: (type, parent) {
 The base box class has a few extension methods:
 
 ```dart
+extension ISOBoxExtension on ISOBoxBase {
   /// Return a list of direct children boxes.
   /// [isContainerCallback] is a callback to determine if a box is a container.
   /// [isFullBoxCallback] is a callback to determine if a box is a full box.
@@ -279,7 +280,8 @@ The base box class has a few extension methods:
     bool Function(String type, ISOBox? parent)? isContainerCallback,
     bool Function(String type, ISOBox? parent)? isFullBoxCallback,
   });
+}
 
-  /// Write a list of boxes to bytes.
-  Future<Uint8List> boxesToBytes(List<ISOBox> boxes);
+/// Write a list of boxes to bytes.
+Future<Uint8List> isoBoxesToBytes(List<ISOBox> boxes);
 ```

@@ -2,7 +2,7 @@ import 'dart:typed_data';
 
 import '../iso_base_media.dart';
 
-extension ISOBoxExt on ISOBoxBase {
+extension ISOBoxExtension on ISOBoxBase {
   /// Return a list of direct children boxes.
   /// [isContainerCallback] is a callback to determine if a box is a container.
   /// [isFullBoxCallback] is a callback to determine if a box is a full box.
@@ -102,13 +102,13 @@ extension ISOBoxExt on ISOBoxBase {
     }
     return box is ISOBox ? box : null;
   }
+}
 
-  /// Write a list of boxes to bytes.
-  Future<Uint8List> boxesToBytes(List<ISOBox> boxes) async {
-    final bb = BytesBuilder();
-    for (final box in boxes) {
-      bb.add(await box.toBytes());
-    }
-    return bb.toBytes();
+/// Write a list of boxes to bytes.
+Future<Uint8List> isoBoxesToBytes(List<ISOBox> boxes) async {
+  final bb = BytesBuilder();
+  for (final box in boxes) {
+    bb.add(await box.toBytes());
   }
+  return bb.toBytes();
 }
