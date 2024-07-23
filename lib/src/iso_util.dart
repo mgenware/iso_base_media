@@ -1,3 +1,5 @@
+import 'dart:typed_data';
+
 import '../iso_base_media.dart';
 
 extension ISOBoxExt on ISOBoxBase {
@@ -99,5 +101,14 @@ extension ISOBoxExt on ISOBoxBase {
           isFullBoxCallback: isFullBoxCallback);
     }
     return box is ISOBox ? box : null;
+  }
+
+  /// Write a list of boxes to bytes.
+  Future<Uint8List> boxesToBytes(List<ISOBox> boxes) async {
+    final bb = BytesBuilder();
+    for (final box in boxes) {
+      bb.add(await box.toBytes());
+    }
+    return bb.toBytes();
   }
 }

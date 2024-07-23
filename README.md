@@ -279,4 +279,7 @@ The base box class has a few extension methods:
     bool Function(String type, ISOBox? parent)? isContainerCallback,
     bool Function(String type, ISOBox? parent)? isFullBoxCallback,
   });
+
+  /// Write a list of boxes to bytes.
+  Future<Uint8List> boxesToBytes(List<ISOBox> boxes);
 ```

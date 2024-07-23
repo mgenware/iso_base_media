@@ -1,6 +1,7 @@
-## 3.2.0
+## 3.2.1
 
 - Add `getDirectChildrenByAsyncFilter` util.
+- Add `boxesToBytes` util.
 
 ## 3.1.0
 

@@ -182,10 +182,9 @@ class ISOBox implements ISOBoxBase {
   Future<Uint8List> toBytes() async {
     final poz = await _src.position();
     await _src.setPosition(headerOffset);
-    final header = await _src.read(headerSize);
-    final data = await _src.read(dataSize);
+    final boxBytes = await _src.read(boxSize);
     await _src.setPosition(poz);
-    return Uint8List.fromList(header + data);
+    return boxBytes;
   }
 
   @override
