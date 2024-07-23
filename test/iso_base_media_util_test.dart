@@ -141,7 +141,6 @@ void main() {
     final matches =
         await root.getDirectChildren(filter: (box) => box.type != 'mdat');
     final bytes = await root.boxesToBytes(matches);
-    await File('/Users/yuanyuanliu/Downloads/t2.dat').writeAsBytes(bytes);
 
     final newSource = ISOSourceBox.fromBytes(bytes);
     expect(await inspectISOBox(newSource), {
