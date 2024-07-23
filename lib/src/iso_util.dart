@@ -23,6 +23,27 @@ extension ISOBoxExt on ISOBoxBase {
     return children;
   }
 
+  /// Return a list of direct children boxes by a given async filter.
+  /// [isContainerCallback] is a callback to determine if a box is a container.
+  /// [isFullBoxCallback] is a callback to determine if a box is a full box.
+  Future<List<ISOBox>> getDirectChildrenByAsyncFilter(
+    Future<bool> Function(ISOBox box) filter, {
+    bool Function(String type, ISOBox? parent)? isContainerCallback,
+    bool Function(String type, ISOBox? parent)? isFullBoxCallback,
+  }) async {
+    final List<ISOBox> children = [];
+    ISOBox? child;
+    do {
+      child = await nextChild(
+          isContainerCallback: isContainerCallback,
+          isFullBoxCallback: isFullBoxCallback);
+      if (child != null && (await filter(child))) {
+        children.add(child);
+      }
+    } while (child != null);
+    return children;
+  }
+
   /// Returns a direct child box by given types.
   /// An empty [types] set will return the first child box.
   /// [isContainerCallback] is a callback to determine if a box is a container.

@@ -1,3 +1,7 @@
+## 3.2.0
+
+- Add `getDirectChildrenByAsyncFilter` util.
+
 ## 3.1.0
 
 - Add `getDirectChildren` util.

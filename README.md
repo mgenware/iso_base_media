@@ -232,6 +232,25 @@ await inspectISOBox(fileBox, isContainerCallback: (type, parent) {
 The base box class has a few extension methods:
 
 ```dart
+  /// Return a list of direct children boxes.
+  /// [isContainerCallback] is a callback to determine if a box is a container.
+  /// [isFullBoxCallback] is a callback to determine if a box is a full box.
+  /// [filter] is a callback to filter boxes.
+  Future<List<ISOBox>> getDirectChildren({
+    bool Function(String type, ISOBox? parent)? isContainerCallback,
+    bool Function(String type, ISOBox? parent)? isFullBoxCallback,
+    bool Function(ISOBox box)? filter,
+  });
+
+  /// Return a list of direct children boxes by a given async filter.
+  /// [isContainerCallback] is a callback to determine if a box is a container.
+  /// [isFullBoxCallback] is a callback to determine if a box is a full box.
+  Future<List<ISOBox>> getDirectChildrenByAsyncFilter(
+    Future<bool> Function(ISOBox box) filter, {
+    bool Function(String type, ISOBox? parent)? isContainerCallback,
+    bool Function(String type, ISOBox? parent)? isFullBoxCallback,
+  });
+
   /// Returns a direct child box by given types.
   /// An empty [types] set will return the first child box.
   /// [isContainerCallback] is a callback to determine if a box is a container.

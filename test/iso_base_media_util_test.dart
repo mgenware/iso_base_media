@@ -52,6 +52,31 @@ void main() {
     await root.close();
   });
 
+  test('getDirectChildrenByAsyncFilter', () async {
+    final root = await _openFile('a.heic');
+    final matches = await root.getDirectChildrenByAsyncFilter((box) async {
+      return box.type == 'ftyp' || box.type == 'meta';
+    });
+    expect(matches.map((e) => e.toDict()).toList(), [
+      {
+        'boxSize': 24,
+        'dataSize': 16,
+        'type': 'ftyp',
+        'headerOffset': 0,
+        'dataOffset': 8
+      },
+      {
+        'boxSize': 510,
+        'dataSize': 498,
+        'type': 'meta',
+        'headerOffset': 24,
+        'dataOffset': 36,
+        'fullBoxInt32': 0
+      }
+    ]);
+    await root.close();
+  });
+
   test('getDirectChildrenByTypes (empty)', () async {
     final root = await _openFile('a.heic');
     final matches = await root.getDirectChildrenByTypes({'ftyp__', 'meta__'});
