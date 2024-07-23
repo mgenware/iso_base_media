@@ -1,3 +1,8 @@
+## 3.1.0
+
+- Add `getDirectChildren` util.
+- Add `toBytes` method to `ISOBox`.
+
 ## 3.0.0
 
 - [Breaking] Remove `ISORootBox` in favor of `ISOSourceBox`.

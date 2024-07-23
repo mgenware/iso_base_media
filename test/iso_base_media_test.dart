@@ -1034,7 +1034,7 @@ void main() {
     final raf = await File('./test/test_files/a.heic').open();
     final fileBox = ISOSourceBox.fromRandomAccessFile(raf);
     // Get all direct children.
-    final children = await fileBox.getDirectChildrenByTypes({});
+    final children = await fileBox.getDirectChildren();
     final bb = BytesBuilder();
     for (final child in children) {
       bb.add(await child.toBytes());

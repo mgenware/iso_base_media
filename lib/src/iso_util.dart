@@ -1,6 +1,28 @@
 import '../iso_base_media.dart';
 
 extension ISOBoxExt on ISOBoxBase {
+  /// Return a list of direct children boxes.
+  /// [isContainerCallback] is a callback to determine if a box is a container.
+  /// [isFullBoxCallback] is a callback to determine if a box is a full box.
+  /// [filter] is a callback to filter boxes.
+  Future<List<ISOBox>> getDirectChildren({
+    bool Function(String type, ISOBox? parent)? isContainerCallback,
+    bool Function(String type, ISOBox? parent)? isFullBoxCallback,
+    bool Function(ISOBox box)? filter,
+  }) async {
+    final List<ISOBox> children = [];
+    ISOBox? child;
+    do {
+      child = await nextChild(
+          isContainerCallback: isContainerCallback,
+          isFullBoxCallback: isFullBoxCallback);
+      if (child != null && (filter == null || filter(child))) {
+        children.add(child);
+      }
+    } while (child != null);
+    return children;
+  }
+
   /// Returns a direct child box by given types.
   /// An empty [types] set will return the first child box.
   /// [isContainerCallback] is a callback to determine if a box is a container.
@@ -32,18 +54,10 @@ extension ISOBoxExt on ISOBoxBase {
     bool Function(String type, ISOBox? parent)? isContainerCallback,
     bool Function(String type, ISOBox? parent)? isFullBoxCallback,
   }) async {
-    final List<ISOBox> children = [];
-    final matchAll = types.isEmpty;
-    ISOBox? child;
-    do {
-      child = await nextChild(
-          isContainerCallback: isContainerCallback,
-          isFullBoxCallback: isFullBoxCallback);
-      if (child != null && (matchAll || types.contains(child.type))) {
-        children.add(child);
-      }
-    } while (child != null);
-    return children;
+    return getDirectChildren(
+        isContainerCallback: isContainerCallback,
+        isFullBoxCallback: isFullBoxCallback,
+        filter: (box) => types.isEmpty || types.contains(box.type));
   }
 
   /// Returns a child box by a given type path.
