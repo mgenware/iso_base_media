@@ -1,3 +1,8 @@
+## 4.0.0
+
+- Remove `ISOSourceBox` in favor of `ISOBox` static methods.
+- Remove inspector methods, use `ISOBox` extension methods instead.
+
 ## 3.2.1
 
 - Add `getDirectChildrenByAsyncFilter` util.

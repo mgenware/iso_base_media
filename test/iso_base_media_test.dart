@@ -2,18 +2,21 @@ import 'dart:io';
 import 'dart:typed_data';
 
 import 'package:iso_base_media/iso_base_media.dart';
+import 'package:random_access_source/random_access_source.dart';
 import 'package:test/test.dart';
+
+import 'common.dart';
 
 Future<void> testFile(String fileName, Map<String, dynamic> expected,
     {bool? readBytes}) async {
-  ISOSourceBox srcBox;
+  ISOBox srcBox;
   final path = './test/test_files/$fileName';
   RandomAccessFile? raf;
   if (readBytes == true) {
-    srcBox = ISOSourceBox.fromBytes(await File(path).readAsBytes());
+    srcBox = ISOBox.fileBox(BytesRASource(await File(path).readAsBytes()));
   } else {
     raf = await File(path).open();
-    srcBox = ISOSourceBox.fromRandomAccessFile(raf);
+    srcBox = ISOBox.fileBox(RandomAccessFileRASource(raf));
   }
   final actual = await inspectISOBox(srcBox);
   expect(actual, expected);
@@ -70,7 +73,6 @@ void main() {
               'headerOffset': 235800,
               'dataOffset': 235812,
               'fullBoxInt32': 0,
-              'parent': 'moov'
             },
             {
               'boxSize': 6083,
@@ -78,7 +80,6 @@ void main() {
               'type': 'trak',
               'headerOffset': 235908,
               'dataOffset': 235916,
-              'parent': 'moov',
               'children': [
                 {
                   'boxSize': 92,
@@ -87,7 +88,6 @@ void main() {
                   'headerOffset': 235916,
                   'dataOffset': 235928,
                   'fullBoxInt32': 7,
-                  'parent': 'trak'
                 },
                 {
                   'boxSize': 5983,
@@ -95,7 +95,6 @@ void main() {
                   'type': 'mdia',
                   'headerOffset': 236008,
                   'dataOffset': 236016,
-                  'parent': 'trak',
                   'children': [
                     {
                       'boxSize': 32,
@@ -104,7 +103,6 @@ void main() {
                       'headerOffset': 236016,
                       'dataOffset': 236028,
                       'fullBoxInt32': 0,
-                      'parent': 'mdia'
                     },
                     {
                       'boxSize': 36,
@@ -113,7 +111,6 @@ void main() {
                       'headerOffset': 236048,
                       'dataOffset': 236060,
                       'fullBoxInt32': 0,
-                      'parent': 'mdia'
                     },
                     {
                       'boxSize': 5907,
@@ -121,7 +118,6 @@ void main() {
                       'type': 'minf',
                       'headerOffset': 236084,
                       'dataOffset': 236092,
-                      'parent': 'mdia',
                       'children': [
                         {
                           'boxSize': 16,
@@ -129,7 +125,6 @@ void main() {
                           'type': 'smhd',
                           'headerOffset': 236092,
                           'dataOffset': 236100,
-                          'parent': 'minf'
                         },
                         {
                           'boxSize': 36,
@@ -137,7 +132,6 @@ void main() {
                           'type': 'dinf',
                           'headerOffset': 236108,
                           'dataOffset': 236116,
-                          'parent': 'minf',
                           'children': [
                             {
                               'boxSize': 28,
@@ -146,7 +140,6 @@ void main() {
                               'headerOffset': 236116,
                               'dataOffset': 236128,
                               'fullBoxInt32': 0,
-                              'parent': 'dinf'
                             }
                           ]
                         },
@@ -156,7 +149,6 @@ void main() {
                           'type': 'stbl',
                           'headerOffset': 236144,
                           'dataOffset': 236152,
-                          'parent': 'minf',
                           'children': [
                             {
                               'boxSize': 91,
@@ -165,7 +157,6 @@ void main() {
                               'headerOffset': 236152,
                               'dataOffset': 236164,
                               'fullBoxInt32': 0,
-                              'parent': 'stbl'
                             },
                             {
                               'boxSize': 24,
@@ -174,7 +165,6 @@ void main() {
                               'headerOffset': 236243,
                               'dataOffset': 236255,
                               'fullBoxInt32': 0,
-                              'parent': 'stbl'
                             },
                             {
                               'boxSize': 24,
@@ -182,7 +172,6 @@ void main() {
                               'type': 'ctts',
                               'headerOffset': 236267,
                               'dataOffset': 236275,
-                              'parent': 'stbl'
                             },
                             {
                               'boxSize': 2284,
@@ -191,7 +180,6 @@ void main() {
                               'headerOffset': 236291,
                               'dataOffset': 236303,
                               'fullBoxInt32': 0,
-                              'parent': 'stbl'
                             },
                             {
                               'boxSize': 1900,
@@ -200,7 +188,6 @@ void main() {
                               'headerOffset': 238575,
                               'dataOffset': 238587,
                               'fullBoxInt32': 0,
-                              'parent': 'stbl'
                             },
                             {
                               'boxSize': 1516,
@@ -209,7 +196,6 @@ void main() {
                               'headerOffset': 240475,
                               'dataOffset': 240487,
                               'fullBoxInt32': 0,
-                              'parent': 'stbl'
                             }
                           ]
                         }
@@ -225,7 +211,6 @@ void main() {
               'type': 'trak',
               'headerOffset': 241991,
               'dataOffset': 241999,
-              'parent': 'moov',
               'children': [
                 {
                   'boxSize': 92,
@@ -234,7 +219,6 @@ void main() {
                   'headerOffset': 241999,
                   'dataOffset': 242011,
                   'fullBoxInt32': 7,
-                  'parent': 'trak'
                 },
                 {
                   'boxSize': 3419,
@@ -242,7 +226,6 @@ void main() {
                   'type': 'mdia',
                   'headerOffset': 242091,
                   'dataOffset': 242099,
-                  'parent': 'trak',
                   'children': [
                     {
                       'boxSize': 32,
@@ -251,7 +234,6 @@ void main() {
                       'headerOffset': 242099,
                       'dataOffset': 242111,
                       'fullBoxInt32': 0,
-                      'parent': 'mdia'
                     },
                     {
                       'boxSize': 36,
@@ -260,7 +242,6 @@ void main() {
                       'headerOffset': 242131,
                       'dataOffset': 242143,
                       'fullBoxInt32': 0,
-                      'parent': 'mdia'
                     },
                     {
                       'boxSize': 3343,
@@ -268,7 +249,6 @@ void main() {
                       'type': 'minf',
                       'headerOffset': 242167,
                       'dataOffset': 242175,
-                      'parent': 'mdia',
                       'children': [
                         {
                           'boxSize': 20,
@@ -276,7 +256,6 @@ void main() {
                           'type': 'vmhd',
                           'headerOffset': 242175,
                           'dataOffset': 242183,
-                          'parent': 'minf'
                         },
                         {
                           'boxSize': 36,
@@ -284,7 +263,6 @@ void main() {
                           'type': 'dinf',
                           'headerOffset': 242195,
                           'dataOffset': 242203,
-                          'parent': 'minf',
                           'children': [
                             {
                               'boxSize': 28,
@@ -293,7 +271,6 @@ void main() {
                               'headerOffset': 242203,
                               'dataOffset': 242215,
                               'fullBoxInt32': 0,
-                              'parent': 'dinf'
                             }
                           ]
                         },
@@ -303,7 +280,6 @@ void main() {
                           'type': 'stbl',
                           'headerOffset': 242231,
                           'dataOffset': 242239,
-                          'parent': 'minf',
                           'children': [
                             {
                               'boxSize': 127,
@@ -312,7 +288,6 @@ void main() {
                               'headerOffset': 242239,
                               'dataOffset': 242251,
                               'fullBoxInt32': 0,
-                              'parent': 'stbl'
                             },
                             {
                               'boxSize': 24,
@@ -321,7 +296,6 @@ void main() {
                               'headerOffset': 242366,
                               'dataOffset': 242378,
                               'fullBoxInt32': 0,
-                              'parent': 'stbl'
                             },
                             {
                               'boxSize': 32,
@@ -330,7 +304,6 @@ void main() {
                               'headerOffset': 242390,
                               'dataOffset': 242402,
                               'fullBoxInt32': 0,
-                              'parent': 'stbl'
                             },
                             {
                               'boxSize': 24,
@@ -338,7 +311,6 @@ void main() {
                               'type': 'ctts',
                               'headerOffset': 242422,
                               'dataOffset': 242430,
-                              'parent': 'stbl'
                             },
                             {
                               'boxSize': 28,
@@ -347,7 +319,6 @@ void main() {
                               'headerOffset': 242446,
                               'dataOffset': 242458,
                               'fullBoxInt32': 0,
-                              'parent': 'stbl'
                             },
                             {
                               'boxSize': 1520,
@@ -356,7 +327,6 @@ void main() {
                               'headerOffset': 242474,
                               'dataOffset': 242486,
                               'fullBoxInt32': 0,
-                              'parent': 'stbl'
                             },
                             {
                               'boxSize': 1516,
@@ -365,7 +335,6 @@ void main() {
                               'headerOffset': 243994,
                               'dataOffset': 244006,
                               'fullBoxInt32': 0,
-                              'parent': 'stbl'
                             }
                           ]
                         }
@@ -414,7 +383,6 @@ void main() {
               'headerOffset': 36,
               'dataOffset': 48,
               'fullBoxInt32': 0,
-              'parent': 'meta'
             },
             {
               'boxSize': 14,
@@ -423,7 +391,6 @@ void main() {
               'headerOffset': 69,
               'dataOffset': 81,
               'fullBoxInt32': 0,
-              'parent': 'meta'
             },
             {
               'boxSize': 52,
@@ -432,7 +399,6 @@ void main() {
               'headerOffset': 83,
               'dataOffset': 95,
               'fullBoxInt32': 0,
-              'parent': 'meta'
             },
             {
               'boxSize': 76,
@@ -441,7 +407,6 @@ void main() {
               'headerOffset': 135,
               'dataOffset': 147,
               'fullBoxInt32': 0,
-              'parent': 'meta'
             },
             {
               'boxSize': 26,
@@ -450,7 +415,6 @@ void main() {
               'headerOffset': 211,
               'dataOffset': 223,
               'fullBoxInt32': 0,
-              'parent': 'meta',
               'children': [
                 {
                   'boxSize': 14,
@@ -458,7 +422,6 @@ void main() {
                   'type': 'thmb',
                   'headerOffset': 223,
                   'dataOffset': 231,
-                  'parent': 'iref'
                 }
               ]
             },
@@ -468,7 +431,6 @@ void main() {
               'type': 'iprp',
               'headerOffset': 237,
               'dataOffset': 245,
-              'parent': 'meta',
               'children': [
                 {
                   'boxSize': 263,
@@ -476,7 +438,6 @@ void main() {
                   'type': 'ipco',
                   'headerOffset': 245,
                   'dataOffset': 253,
-                  'parent': 'iprp',
                   'children': [
                     {
                       'boxSize': 108,
@@ -484,7 +445,6 @@ void main() {
                       'type': 'hvcC',
                       'headerOffset': 253,
                       'dataOffset': 261,
-                      'parent': 'ipco'
                     },
                     {
                       'boxSize': 20,
@@ -492,7 +452,6 @@ void main() {
                       'type': 'ispe',
                       'headerOffset': 361,
                       'dataOffset': 369,
-                      'parent': 'ipco'
                     },
                     {
                       'boxSize': 107,
@@ -500,7 +459,6 @@ void main() {
                       'type': 'hvcC',
                       'headerOffset': 381,
                       'dataOffset': 389,
-                      'parent': 'ipco'
                     },
                     {
                       'boxSize': 20,
@@ -508,7 +466,6 @@ void main() {
                       'type': 'ispe',
                       'headerOffset': 488,
                       'dataOffset': 496,
-                      'parent': 'ipco'
                     }
                   ]
                 },
@@ -518,7 +475,6 @@ void main() {
                   'type': 'ipma',
                   'headerOffset': 508,
                   'dataOffset': 516,
-                  'parent': 'iprp'
                 }
               ]
             }
@@ -563,7 +519,6 @@ void main() {
                   'headerOffset': 36,
                   'dataOffset': 48,
                   'fullBoxInt32': 0,
-                  'parent': 'meta'
                 },
                 {
                   'boxSize': 14,
@@ -572,7 +527,6 @@ void main() {
                   'headerOffset': 69,
                   'dataOffset': 81,
                   'fullBoxInt32': 0,
-                  'parent': 'meta'
                 },
                 {
                   'boxSize': 52,
@@ -581,7 +535,6 @@ void main() {
                   'headerOffset': 83,
                   'dataOffset': 95,
                   'fullBoxInt32': 0,
-                  'parent': 'meta'
                 },
                 {
                   'boxSize': 76,
@@ -590,7 +543,6 @@ void main() {
                   'headerOffset': 135,
                   'dataOffset': 147,
                   'fullBoxInt32': 0,
-                  'parent': 'meta'
                 },
                 {
                   'boxSize': 26,
@@ -599,7 +551,6 @@ void main() {
                   'headerOffset': 211,
                   'dataOffset': 223,
                   'fullBoxInt32': 0,
-                  'parent': 'meta',
                   'children': [
                     {
                       'boxSize': 14,
@@ -607,7 +558,6 @@ void main() {
                       'type': 'thmb',
                       'headerOffset': 223,
                       'dataOffset': 231,
-                      'parent': 'iref'
                     }
                   ]
                 },
@@ -617,7 +567,6 @@ void main() {
                   'type': 'iprp',
                   'headerOffset': 237,
                   'dataOffset': 245,
-                  'parent': 'meta',
                   'children': [
                     {
                       'boxSize': 263,
@@ -625,7 +574,6 @@ void main() {
                       'type': 'ipco',
                       'headerOffset': 245,
                       'dataOffset': 253,
-                      'parent': 'iprp',
                       'children': [
                         {
                           'boxSize': 108,
@@ -633,7 +581,6 @@ void main() {
                           'type': 'hvcC',
                           'headerOffset': 253,
                           'dataOffset': 261,
-                          'parent': 'ipco'
                         },
                         {
                           'boxSize': 20,
@@ -641,7 +588,6 @@ void main() {
                           'type': 'ispe',
                           'headerOffset': 361,
                           'dataOffset': 369,
-                          'parent': 'ipco'
                         },
                         {
                           'boxSize': 107,
@@ -649,7 +595,6 @@ void main() {
                           'type': 'hvcC',
                           'headerOffset': 381,
                           'dataOffset': 389,
-                          'parent': 'ipco'
                         },
                         {
                           'boxSize': 20,
@@ -657,7 +602,6 @@ void main() {
                           'type': 'ispe',
                           'headerOffset': 488,
                           'dataOffset': 496,
-                          'parent': 'ipco'
                         }
                       ]
                     },
@@ -667,7 +611,6 @@ void main() {
                       'type': 'ipma',
                       'headerOffset': 508,
                       'dataOffset': 516,
-                      'parent': 'iprp'
                     }
                   ]
                 }
@@ -688,7 +631,7 @@ void main() {
   test('Callback', () async {
     final list = <Object>[];
     final raf = await File('./test/test_files/a.heic').open();
-    final fileBox = ISOSourceBox.fromRandomAccessFile(raf);
+    final fileBox = ISOBox.fileBoxFromRandomAccessFile(raf);
     await inspectISOBox(fileBox, callback: (box, depth) {
       final dict = box.toDict();
       dict['depth'] = depth;
@@ -720,7 +663,6 @@ void main() {
         'headerOffset': 36,
         'dataOffset': 48,
         'fullBoxInt32': 0,
-        'parent': 'meta',
         'depth': 2
       },
       {
@@ -730,7 +672,6 @@ void main() {
         'headerOffset': 69,
         'dataOffset': 81,
         'fullBoxInt32': 0,
-        'parent': 'meta',
         'depth': 2
       },
       {
@@ -740,7 +681,6 @@ void main() {
         'headerOffset': 83,
         'dataOffset': 95,
         'fullBoxInt32': 0,
-        'parent': 'meta',
         'depth': 2
       },
       {
@@ -750,7 +690,6 @@ void main() {
         'headerOffset': 135,
         'dataOffset': 147,
         'fullBoxInt32': 0,
-        'parent': 'meta',
         'depth': 2
       },
       {
@@ -760,7 +699,6 @@ void main() {
         'headerOffset': 211,
         'dataOffset': 223,
         'fullBoxInt32': 0,
-        'parent': 'meta',
         'depth': 2
       },
       {
@@ -769,7 +707,6 @@ void main() {
         'type': 'thmb',
         'headerOffset': 223,
         'dataOffset': 231,
-        'parent': 'iref',
         'depth': 3
       },
       {
@@ -778,7 +715,6 @@ void main() {
         'type': 'iprp',
         'headerOffset': 237,
         'dataOffset': 245,
-        'parent': 'meta',
         'depth': 2
       },
       {
@@ -787,7 +723,6 @@ void main() {
         'type': 'ipco',
         'headerOffset': 245,
         'dataOffset': 253,
-        'parent': 'iprp',
         'depth': 3
       },
       {
@@ -796,7 +731,6 @@ void main() {
         'type': 'hvcC',
         'headerOffset': 253,
         'dataOffset': 261,
-        'parent': 'ipco',
         'depth': 4
       },
       {
@@ -805,7 +739,6 @@ void main() {
         'type': 'ispe',
         'headerOffset': 361,
         'dataOffset': 369,
-        'parent': 'ipco',
         'depth': 4
       },
       {
@@ -814,7 +747,6 @@ void main() {
         'type': 'hvcC',
         'headerOffset': 381,
         'dataOffset': 389,
-        'parent': 'ipco',
         'depth': 4
       },
       {
@@ -823,7 +755,6 @@ void main() {
         'type': 'ispe',
         'headerOffset': 488,
         'dataOffset': 496,
-        'parent': 'ipco',
         'depth': 4
       },
       {
@@ -832,7 +763,6 @@ void main() {
         'type': 'ipma',
         'headerOffset': 508,
         'dataOffset': 516,
-        'parent': 'iprp',
         'depth': 3
       },
       {
@@ -850,7 +780,7 @@ void main() {
   test('Callback (early exit)', () async {
     final list = <Object>[];
     final raf = await File('./test/test_files/a.heic').open();
-    final fileBox = ISOSourceBox.fromRandomAccessFile(raf);
+    final fileBox = ISOBox.fileBoxFromRandomAccessFile(raf);
     await inspectISOBox(fileBox, callback: (box, depth) {
       final dict = box.toDict();
       dict['depth'] = depth;
@@ -893,9 +823,9 @@ void main() {
   test('Callback (isContainerCallback)', () async {
     final list = <Object>[];
     final raf = await File('./test/test_files/a.heic').open();
-    final fileBox = ISOSourceBox.fromRandomAccessFile(raf);
-    await inspectISOBox(fileBox, isContainerCallback: (type, parent) {
-      if (type == 'meta' && parent == null) {
+    final fileBox = ISOBox.fileBoxFromRandomAccessFile(raf);
+    await inspectISOBox(fileBox, isContainerCallback: (type) {
+      if (type == 'meta') {
         return true;
       }
       return false;
@@ -930,7 +860,6 @@ void main() {
         'headerOffset': 36,
         'dataOffset': 48,
         'fullBoxInt32': 0,
-        'parent': 'meta',
         'depth': 2
       },
       {
@@ -940,7 +869,6 @@ void main() {
         'headerOffset': 69,
         'dataOffset': 81,
         'fullBoxInt32': 0,
-        'parent': 'meta',
         'depth': 2
       },
       {
@@ -950,7 +878,6 @@ void main() {
         'headerOffset': 83,
         'dataOffset': 95,
         'fullBoxInt32': 0,
-        'parent': 'meta',
         'depth': 2
       },
       {
@@ -960,7 +887,6 @@ void main() {
         'headerOffset': 135,
         'dataOffset': 147,
         'fullBoxInt32': 0,
-        'parent': 'meta',
         'depth': 2
       },
       {
@@ -970,7 +896,6 @@ void main() {
         'headerOffset': 211,
         'dataOffset': 223,
         'fullBoxInt32': 0,
-        'parent': 'meta',
         'depth': 2
       },
       {
@@ -979,7 +904,6 @@ void main() {
         'type': 'iprp',
         'headerOffset': 237,
         'dataOffset': 245,
-        'parent': 'meta',
         'depth': 2
       },
       {
@@ -996,10 +920,10 @@ void main() {
 
   test('isFullBoxCallback', () async {
     final raf = await File('./test/test_files/a.mp4').open();
-    final fileBox = ISOSourceBox.fromRandomAccessFile(raf);
+    final fileBox = ISOBox.fileBoxFromRandomAccessFile(raf);
     final moov = await fileBox.getDirectChildByTypes({'moov'});
-    final mvhd = await moov!.getDirectChildByTypes({'mvhd'},
-        isFullBoxCallback: (type, parent) {
+    final mvhd =
+        await moov!.getDirectChildByTypes({'mvhd'}, isFullBoxCallback: (type) {
       return type == 'mvhd';
     });
     expect(mvhd!.toDict(), {
@@ -1009,14 +933,13 @@ void main() {
       'headerOffset': 235800,
       'dataOffset': 235812,
       'fullBoxInt32': 0,
-      'parent': 'moov'
     });
     await raf.close();
   });
 
   test('Extract data', () async {
     final raf = await File('./test/test_files/a.heic').open();
-    final fileBox = ISOSourceBox.fromRandomAccessFile(raf);
+    final fileBox = ISOBox.fileBoxFromRandomAccessFile(raf);
     var s = '';
     await inspectISOBox(fileBox, callback: (box, depth) async {
       if (box.type == 'ispe') {
@@ -1032,7 +955,7 @@ void main() {
 
   test('toBytes', () async {
     final raf = await File('./test/test_files/a.heic').open();
-    final fileBox = ISOSourceBox.fromRandomAccessFile(raf);
+    final fileBox = ISOBox.fileBoxFromRandomAccessFile(raf);
     // Get all direct children.
     final children = await fileBox.getDirectChildren();
     final bb = BytesBuilder();

@@ -2,14 +2,14 @@ import 'dart:typed_data';
 
 import '../iso_base_media.dart';
 
-extension ISOBoxExtension on ISOBoxBase {
+extension ISOBoxExtension on ISOBox {
   /// Return a list of direct children boxes.
   /// [isContainerCallback] is a callback to determine if a box is a container.
   /// [isFullBoxCallback] is a callback to determine if a box is a full box.
   /// [filter] is a callback to filter boxes.
   Future<List<ISOBox>> getDirectChildren({
-    bool Function(String type, ISOBox? parent)? isContainerCallback,
-    bool Function(String type, ISOBox? parent)? isFullBoxCallback,
+    bool Function(String type)? isContainerCallback,
+    bool Function(String type)? isFullBoxCallback,
     bool Function(ISOBox box)? filter,
   }) async {
     final List<ISOBox> children = [];
@@ -30,8 +30,8 @@ extension ISOBoxExtension on ISOBoxBase {
   /// [isFullBoxCallback] is a callback to determine if a box is a full box.
   Future<List<ISOBox>> getDirectChildrenByAsyncFilter(
     Future<bool> Function(ISOBox box) filter, {
-    bool Function(String type, ISOBox? parent)? isContainerCallback,
-    bool Function(String type, ISOBox? parent)? isFullBoxCallback,
+    bool Function(String type)? isContainerCallback,
+    bool Function(String type)? isFullBoxCallback,
   }) async {
     final List<ISOBox> children = [];
     ISOBox? child;
@@ -52,8 +52,8 @@ extension ISOBoxExtension on ISOBoxBase {
   /// [isFullBoxCallback] is a callback to determine if a box is a full box.
   Future<ISOBox?> getDirectChildByTypes(
     Set<String> types, {
-    bool Function(String type, ISOBox? parent)? isContainerCallback,
-    bool Function(String type, ISOBox? parent)? isFullBoxCallback,
+    bool Function(String type)? isContainerCallback,
+    bool Function(String type)? isFullBoxCallback,
   }) async {
     ISOBox? child;
     final matchAll = types.isEmpty;
@@ -74,8 +74,8 @@ extension ISOBoxExtension on ISOBoxBase {
   /// [isFullBoxCallback] is a callback to determine if a box is a full box.
   Future<List<ISOBox>> getDirectChildrenByTypes(
     Set<String> types, {
-    bool Function(String type, ISOBox? parent)? isContainerCallback,
-    bool Function(String type, ISOBox? parent)? isFullBoxCallback,
+    bool Function(String type)? isContainerCallback,
+    bool Function(String type)? isFullBoxCallback,
   }) async {
     return getDirectChildren(
         isContainerCallback: isContainerCallback,
@@ -88,10 +88,10 @@ extension ISOBoxExtension on ISOBoxBase {
   /// [isFullBoxCallback] is a callback to determine if a box is a full box.
   Future<ISOBox?> getChildByTypePath(
     List<String> path, {
-    bool Function(String type, ISOBox? parent)? isContainerCallback,
-    bool Function(String type, ISOBox? parent)? isFullBoxCallback,
+    bool Function(String type)? isContainerCallback,
+    bool Function(String type)? isFullBoxCallback,
   }) async {
-    ISOBoxBase? box = this;
+    ISOBox? box = this;
     for (final type in path) {
       if (box == null) {
         return null;

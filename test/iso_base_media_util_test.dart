@@ -1,12 +1,16 @@
 import 'dart:io';
 
 import 'package:iso_base_media/iso_base_media.dart';
+import 'package:random_access_source/random_access_source.dart';
 import 'package:test/test.dart';
 
-Future<ISOSourceBox> _openFile(String name) async {
+import 'common.dart';
+
+Future<ISOBox> _openFile(String name) async {
   final raf =
       await File(name.startsWith('/') ? name : 'test/test_files/$name').open();
-  return ISOSourceBox.fromRandomAccessFile(raf);
+  final src = RandomAccessFileRASource(raf);
+  return ISOBox.fileBox(src);
 }
 
 void main() {
@@ -20,14 +24,14 @@ void main() {
       'headerOffset': 0,
       'dataOffset': 8
     });
-    await root.close();
+    await root.src.close();
   });
 
   test('getDirectChildByTypes (empty)', () async {
     final root = await _openFile('a.heic');
     final firstMatch = await root.getDirectChildByTypes({'ftyp__', 'meta__'});
     expect(firstMatch, null);
-    await root.close();
+    await root.src.close();
   });
 
   test('getDirectChildrenByTypes', () async {
@@ -50,7 +54,7 @@ void main() {
         'fullBoxInt32': 0
       }
     ]);
-    await root.close();
+    await root.src.close();
   });
 
   test('getDirectChildrenByAsyncFilter', () async {
@@ -75,14 +79,14 @@ void main() {
         'fullBoxInt32': 0
       }
     ]);
-    await root.close();
+    await root.src.close();
   });
 
   test('getDirectChildrenByTypes (empty)', () async {
     final root = await _openFile('a.heic');
     final matches = await root.getDirectChildrenByTypes({'ftyp__', 'meta__'});
     expect(matches, <ISOBox>[]);
-    await root.close();
+    await root.src.close();
   });
 
   test('getChildByTypePath', () async {
@@ -95,16 +99,15 @@ void main() {
       'headerOffset': 135,
       'dataOffset': 147,
       'fullBoxInt32': 0,
-      'parent': 'meta'
     });
-    await root.close();
+    await root.src.close();
   });
 
   test('getChildByTypePath (empty)', () async {
     final root = await _openFile('a.heic');
     final match = await root.getChildByTypePath(['meta__', 'iinf__']);
     expect(match, null);
-    await root.close();
+    await root.src.close();
   });
 
   test('rootBox.seek', () async {
@@ -119,7 +122,7 @@ void main() {
       'headerOffset': 0,
       'dataOffset': 8
     });
-    await root.close();
+    await root.src.close();
   });
 
   test('childBox.seek', () async {
@@ -133,7 +136,7 @@ void main() {
     final dict2 = match2!.toDict();
 
     expect(dict1, dict2);
-    await root.close();
+    await root.src.close();
   });
 
   test('boxesToBytes', () async {
@@ -142,8 +145,8 @@ void main() {
         await root.getDirectChildren(filter: (box) => box.type != 'mdat');
     final bytes = await isoBoxesToBytes(matches);
 
-    final newSource = ISOSourceBox.fromBytes(bytes);
-    expect(await inspectISOBox(newSource), {
+    final newBox = ISOBox.fileBoxFromBytes(bytes);
+    expect(await inspectISOBox(newBox), {
       'root': true,
       'children': [
         {
@@ -168,7 +171,6 @@ void main() {
               'headerOffset': 36,
               'dataOffset': 48,
               'fullBoxInt32': 0,
-              'parent': 'meta'
             },
             {
               'boxSize': 14,
@@ -177,7 +179,6 @@ void main() {
               'headerOffset': 69,
               'dataOffset': 81,
               'fullBoxInt32': 0,
-              'parent': 'meta'
             },
             {
               'boxSize': 52,
@@ -186,7 +187,6 @@ void main() {
               'headerOffset': 83,
               'dataOffset': 95,
               'fullBoxInt32': 0,
-              'parent': 'meta'
             },
             {
               'boxSize': 76,
@@ -195,7 +195,6 @@ void main() {
               'headerOffset': 135,
               'dataOffset': 147,
               'fullBoxInt32': 0,
-              'parent': 'meta'
             },
             {
               'boxSize': 26,
@@ -204,7 +203,6 @@ void main() {
               'headerOffset': 211,
               'dataOffset': 223,
               'fullBoxInt32': 0,
-              'parent': 'meta',
               'children': [
                 {
                   'boxSize': 14,
@@ -212,7 +210,6 @@ void main() {
                   'type': 'thmb',
                   'headerOffset': 223,
                   'dataOffset': 231,
-                  'parent': 'iref'
                 }
               ]
             },
@@ -222,7 +219,6 @@ void main() {
               'type': 'iprp',
               'headerOffset': 237,
               'dataOffset': 245,
-              'parent': 'meta',
               'children': [
                 {
                   'boxSize': 263,
@@ -230,7 +226,6 @@ void main() {
                   'type': 'ipco',
                   'headerOffset': 245,
                   'dataOffset': 253,
-                  'parent': 'iprp',
                   'children': [
                     {
                       'boxSize': 108,
@@ -238,7 +233,6 @@ void main() {
                       'type': 'hvcC',
                       'headerOffset': 253,
                       'dataOffset': 261,
-                      'parent': 'ipco'
                     },
                     {
                       'boxSize': 20,
@@ -246,7 +240,6 @@ void main() {
                       'type': 'ispe',
                       'headerOffset': 361,
                       'dataOffset': 369,
-                      'parent': 'ipco'
                     },
                     {
                       'boxSize': 107,
@@ -254,7 +247,6 @@ void main() {
                       'type': 'hvcC',
                       'headerOffset': 381,
                       'dataOffset': 389,
-                      'parent': 'ipco'
                     },
                     {
                       'boxSize': 20,
@@ -262,7 +254,6 @@ void main() {
                       'type': 'ispe',
                       'headerOffset': 488,
                       'dataOffset': 496,
-                      'parent': 'ipco'
                     }
                   ]
                 },
@@ -272,7 +263,6 @@ void main() {
                   'type': 'ipma',
                   'headerOffset': 508,
                   'dataOffset': 516,
-                  'parent': 'iprp'
                 }
               ]
             }
@@ -280,6 +270,6 @@ void main() {
         }
       ]
     });
-    await root.close();
+    await root.src.close();
   });
 }
