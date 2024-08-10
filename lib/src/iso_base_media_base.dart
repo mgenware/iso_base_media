@@ -162,22 +162,29 @@ class ISOBox {
     _currentOffset = dataOffset;
   }
 
+  /// Creates a file box from [RandomAccessSource].
   static ISOBox fileBox(RandomAccessSource src) {
     return ISOBox(true, 0, 'root', true, src, 0, 0, null);
   }
 
+  /// Creates a file box from [RandomAccessFile].
   static ISOBox fileBoxFromRandomAccessFile(RandomAccessFile file) {
     return ISOBox.fileBox(RandomAccessFileRASource(file));
   }
 
+  /// Creates a file box from bytes.
   static ISOBox fileBoxFromBytes(Uint8List bytes) {
     return ISOBox.fileBox(BytesRASource(bytes));
   }
 
+  /// Opens a file box from the given path.
   static Future<ISOBox> openFileBoxFromPath(String path) async {
     return ISOBox.fileBoxFromRandomAccessFile(await File(path).open());
   }
 
+  /// Returns the next child box. If the box is not a container, returns null.
+  /// If [isContainerCallback] is provided, it will be used to determine if the box is a container.
+  /// If [isFullBoxCallback] is provided, it will be used to determine if the box is a full box.
   Future<ISOBox?> nextChild({
     bool Function(String type)? isContainerCallback,
     bool Function(String type)? isFullBoxCallback,
@@ -196,6 +203,7 @@ class ISOBox {
     return box;
   }
 
+  /// Seeks to the given offset.
   Future<void> seek(int offset) async {
     offset = dataOffset + offset;
     await _src.setPosition(offset);
@@ -250,6 +258,11 @@ class ISOBox {
     final version = (fullBoxInt32! >> 24) & 0xff;
     final flags = fullBoxInt32! & 0xffffff;
     return ISOFullBoxInfo(version, flags);
+  }
+
+  /// Closes the underlying source.
+  Future<void> close() async {
+    await _src.close();
   }
 }
 
