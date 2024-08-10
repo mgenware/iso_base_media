@@ -1,3 +1,7 @@
+## 4.0.1
+
+- Add `close` to `ISOBox`.
+
 ## 4.0.0
 
 - Remove `ISOSourceBox` in favor of `ISOBox` static methods.
