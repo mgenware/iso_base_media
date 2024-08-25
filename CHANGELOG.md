@@ -1,3 +1,7 @@
+## 4.0.2
+
+- Fix issues with uint8list sublist views.
+
 ## 4.0.1
 
 - Add `close` to `ISOBox`.
