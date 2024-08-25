@@ -2,17 +2,20 @@ import 'dart:io';
 import 'dart:typed_data';
 
 import 'package:iso_base_media/iso_base_media.dart';
+import 'package:iso_base_media/src/uint8list_extension.dart';
 import 'package:random_access_source/random_access_source.dart';
 import 'package:test/test.dart';
 
 import 'common.dart';
 
 Future<void> testFile(String fileName, Map<String, dynamic> expected,
-    {bool? readBytes}) async {
+    {bool? readBytes, Uint8List? bytes}) async {
   ISOBox srcBox;
   final path = './test/test_files/$fileName';
   RandomAccessFile? raf;
-  if (readBytes == true) {
+  if (bytes != null) {
+    srcBox = ISOBox.fileBox(BytesRASource(bytes));
+  } else if (readBytes == true) {
     srcBox = ISOBox.fileBox(BytesRASource(await File(path).readAsBytes()));
   } else {
     raf = await File(path).open();
@@ -21,16 +24,6 @@ Future<void> testFile(String fileName, Map<String, dynamic> expected,
   final actual = await inspectISOBox(srcBox);
   expect(actual, expected);
   await raf?.close();
-}
-
-String uint8ListToHex(Uint8List bytes) {
-  final StringBuffer buffer = StringBuffer();
-  buffer.write('bytes(${bytes.length}): ');
-  for (final byte in bytes) {
-    buffer.write(byte.toRadixString(16).padLeft(2, '0'));
-    buffer.write(' ');
-  }
-  return buffer.toString();
 }
 
 void main() {
@@ -491,6 +484,149 @@ void main() {
     });
   });
 
+  test('Uint8List sub view', () async {
+    final imgBytes = await File('./test/test_files/a.heic').readAsBytes();
+    final bb = BytesBuilder();
+    bb.add([1, 2, 3, 4, 5, 6, 7, 8, 9, 10]);
+    bb.add(imgBytes);
+    bb.add([11, 12, 13, 14, 15, 16, 17, 18, 19, 20]);
+    final subView = bb.toBytes().subView(10, 10 + imgBytes.length);
+    await testFile(
+        '',
+        {
+          'root': true,
+          'children': [
+            {
+              'boxSize': 24,
+              'dataSize': 16,
+              'type': 'ftyp',
+              'headerOffset': 0,
+              'dataOffset': 8
+            },
+            {
+              'boxSize': 510,
+              'dataSize': 498,
+              'type': 'meta',
+              'headerOffset': 24,
+              'dataOffset': 36,
+              'fullBoxInt32': 0,
+              'children': [
+                {
+                  'boxSize': 33,
+                  'dataSize': 21,
+                  'type': 'hdlr',
+                  'headerOffset': 36,
+                  'dataOffset': 48,
+                  'fullBoxInt32': 0,
+                },
+                {
+                  'boxSize': 14,
+                  'dataSize': 2,
+                  'type': 'pitm',
+                  'headerOffset': 69,
+                  'dataOffset': 81,
+                  'fullBoxInt32': 0,
+                },
+                {
+                  'boxSize': 52,
+                  'dataSize': 40,
+                  'type': 'iloc',
+                  'headerOffset': 83,
+                  'dataOffset': 95,
+                  'fullBoxInt32': 0,
+                },
+                {
+                  'boxSize': 76,
+                  'dataSize': 64,
+                  'type': 'iinf',
+                  'headerOffset': 135,
+                  'dataOffset': 147,
+                  'fullBoxInt32': 0,
+                },
+                {
+                  'boxSize': 26,
+                  'dataSize': 14,
+                  'type': 'iref',
+                  'headerOffset': 211,
+                  'dataOffset': 223,
+                  'fullBoxInt32': 0,
+                  'children': [
+                    {
+                      'boxSize': 14,
+                      'dataSize': 6,
+                      'type': 'thmb',
+                      'headerOffset': 223,
+                      'dataOffset': 231,
+                    }
+                  ]
+                },
+                {
+                  'boxSize': 297,
+                  'dataSize': 289,
+                  'type': 'iprp',
+                  'headerOffset': 237,
+                  'dataOffset': 245,
+                  'children': [
+                    {
+                      'boxSize': 263,
+                      'dataSize': 255,
+                      'type': 'ipco',
+                      'headerOffset': 245,
+                      'dataOffset': 253,
+                      'children': [
+                        {
+                          'boxSize': 108,
+                          'dataSize': 100,
+                          'type': 'hvcC',
+                          'headerOffset': 253,
+                          'dataOffset': 261,
+                        },
+                        {
+                          'boxSize': 20,
+                          'dataSize': 12,
+                          'type': 'ispe',
+                          'headerOffset': 361,
+                          'dataOffset': 369,
+                        },
+                        {
+                          'boxSize': 107,
+                          'dataSize': 99,
+                          'type': 'hvcC',
+                          'headerOffset': 381,
+                          'dataOffset': 389,
+                        },
+                        {
+                          'boxSize': 20,
+                          'dataSize': 12,
+                          'type': 'ispe',
+                          'headerOffset': 488,
+                          'dataOffset': 496,
+                        }
+                      ]
+                    },
+                    {
+                      'boxSize': 26,
+                      'dataSize': 18,
+                      'type': 'ipma',
+                      'headerOffset': 508,
+                      'dataOffset': 516,
+                    }
+                  ]
+                }
+              ]
+            },
+            {
+              'boxSize': 293074,
+              'dataSize': 293066,
+              'type': 'mdat',
+              'headerOffset': 534,
+              'dataOffset': 542
+            }
+          ]
+        },
+        bytes: subView);
+  });
+
   test('Byte source', () async {
     await testFile(
         'a.heic',
@@ -944,7 +1080,7 @@ void main() {
     await inspectISOBox(fileBox, callback: (box, depth) async {
       if (box.type == 'ispe') {
         final data = await box.extractData();
-        s += '${uint8ListToHex(data)}|';
+        s += '${data.toHex()}|';
       }
       return true;
     });

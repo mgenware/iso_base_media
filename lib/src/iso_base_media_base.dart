@@ -4,6 +4,8 @@ import 'dart:typed_data';
 
 import 'package:random_access_source/random_access_source.dart';
 
+import 'uint8list_extension.dart';
+
 bool _checkIsContainerBox(
     String type, bool Function(String type)? isContainerCallback) {
   return isContainerCallback != null
@@ -34,7 +36,7 @@ Future<ISOBox?> _readChildBox(
   if (sizeBuffer.length < 4) {
     throw Exception('Expected 4 bytes for box size, got ${sizeBuffer.length}');
   }
-  var boxSize = sizeBuffer.buffer.asByteData().getUint32(0);
+  var boxSize = sizeBuffer.asByteData().getUint32(0);
 
   final typeBuffer = await src.read(4);
   if (typeBuffer.length < 4) {
@@ -57,7 +59,7 @@ Future<ISOBox?> _readChildBox(
       throw Exception(
           'Expected 8 bytes for large box size, got ${largeSizeBuffer.length}');
     }
-    boxSize = largeSizeBuffer.buffer.asByteData().getUint64(0);
+    boxSize = largeSizeBuffer.asByteData().getUint64(0);
   } else if (boxSize == 0) {
     boxSize =
         await src.length() - await src.position() + 4 /* Size bytes size */;
@@ -75,7 +77,7 @@ Future<ISOBox?> _readChildBox(
       throw Exception(
           'Expected 4 bytes for full box data, got ${fullBoxInt32Buffer.length}');
     }
-    fullBoxInt32 = fullBoxInt32Buffer.buffer.asByteData().getUint32(0);
+    fullBoxInt32 = fullBoxInt32Buffer.asByteData().getUint32(0);
   }
 
   final dataOffset = await src.position();
