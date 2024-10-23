@@ -1,3 +1,7 @@
+## 4.1.0
+
+- Add an optional index param to `nextChild`.
+
 ## 4.0.2
 
 - Fix issues with uint8list sublist views.
