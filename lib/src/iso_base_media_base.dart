@@ -151,6 +151,11 @@ class ISOBox {
   /// Current parsing offset.
   late int _currentOffset;
 
+  int _index = -1;
+
+  /// An optional index of the box when calling [nextChild].
+  int get index => _index;
+
   ISOBox(
     this.isRootFileBox,
     this.boxSize,
@@ -190,6 +195,7 @@ class ISOBox {
   Future<ISOBox?> nextChild({
     bool Function(String type)? isContainerCallback,
     bool Function(String type)? isFullBoxCallback,
+    int? index,
   }) async {
     if (!isContainer) {
       return null;
@@ -202,6 +208,9 @@ class ISOBox {
     final box =
         await _readChildBox(_src, isContainerCallback, isFullBoxCallback);
     _currentOffset = await _src.position();
+    if (box != null && index != null) {
+      box._index = index;
+    }
     return box;
   }
 
@@ -242,6 +251,9 @@ class ISOBox {
     };
     if (fullBoxInt32 != null) {
       res['fullBoxInt32'] = fullBoxInt32;
+    }
+    if (_index >= 0) {
+      res['index'] = _index;
     }
     return res;
   }

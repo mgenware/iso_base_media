@@ -14,10 +14,13 @@ extension ISOBoxExtension on ISOBox {
   }) async {
     final List<ISOBox> children = [];
     ISOBox? child;
+    var i = 0;
     do {
       child = await nextChild(
-          isContainerCallback: isContainerCallback,
-          isFullBoxCallback: isFullBoxCallback);
+        isContainerCallback: isContainerCallback,
+        isFullBoxCallback: isFullBoxCallback,
+        index: i++,
+      );
       if (child != null && (filter == null || filter(child))) {
         children.add(child);
       }
@@ -35,10 +38,13 @@ extension ISOBoxExtension on ISOBox {
   }) async {
     final List<ISOBox> children = [];
     ISOBox? child;
+    var i = 0;
     do {
       child = await nextChild(
-          isContainerCallback: isContainerCallback,
-          isFullBoxCallback: isFullBoxCallback);
+        isContainerCallback: isContainerCallback,
+        isFullBoxCallback: isFullBoxCallback,
+        index: i++,
+      );
       if (child != null && (await filter(child))) {
         children.add(child);
       }
@@ -57,10 +63,13 @@ extension ISOBoxExtension on ISOBox {
   }) async {
     ISOBox? child;
     final matchAll = types.isEmpty;
+    var i = 0;
     do {
       child = await nextChild(
-          isContainerCallback: isContainerCallback,
-          isFullBoxCallback: isFullBoxCallback);
+        isContainerCallback: isContainerCallback,
+        isFullBoxCallback: isFullBoxCallback,
+        index: i++,
+      );
       if (child != null && (matchAll || types.contains(child.type))) {
         return child;
       }

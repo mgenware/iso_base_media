@@ -1069,6 +1069,7 @@ void main() {
       'headerOffset': 235800,
       'dataOffset': 235812,
       'fullBoxInt32': 0,
+      'index': 0
     });
     await raf.close();
   });

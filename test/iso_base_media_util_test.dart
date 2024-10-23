@@ -22,7 +22,8 @@ void main() {
       'dataSize': 16,
       'type': 'ftyp',
       'headerOffset': 0,
-      'dataOffset': 8
+      'dataOffset': 8,
+      'index': 0
     });
     await root.src.close();
   });
@@ -43,7 +44,8 @@ void main() {
         'dataSize': 16,
         'type': 'ftyp',
         'headerOffset': 0,
-        'dataOffset': 8
+        'dataOffset': 8,
+        'index': 0
       },
       {
         'boxSize': 510,
@@ -51,7 +53,8 @@ void main() {
         'type': 'meta',
         'headerOffset': 24,
         'dataOffset': 36,
-        'fullBoxInt32': 0
+        'fullBoxInt32': 0,
+        'index': 1
       }
     ]);
     await root.src.close();
@@ -68,7 +71,8 @@ void main() {
         'dataSize': 16,
         'type': 'ftyp',
         'headerOffset': 0,
-        'dataOffset': 8
+        'dataOffset': 8,
+        'index': 0
       },
       {
         'boxSize': 510,
@@ -76,7 +80,8 @@ void main() {
         'type': 'meta',
         'headerOffset': 24,
         'dataOffset': 36,
-        'fullBoxInt32': 0
+        'fullBoxInt32': 0,
+        'index': 1
       }
     ]);
     await root.src.close();
@@ -99,6 +104,7 @@ void main() {
       'headerOffset': 135,
       'dataOffset': 147,
       'fullBoxInt32': 0,
+      'index': 3
     });
     await root.src.close();
   });
@@ -120,7 +126,8 @@ void main() {
       'dataSize': 16,
       'type': 'ftyp',
       'headerOffset': 0,
-      'dataOffset': 8
+      'dataOffset': 8,
+      'index': 0
     });
     await root.src.close();
   });
