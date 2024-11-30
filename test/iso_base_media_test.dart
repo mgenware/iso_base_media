@@ -19,7 +19,7 @@ Future<void> testFile(String fileName, Map<String, dynamic> expected,
     srcBox = ISOBox.fileBox(BytesRASource(await File(path).readAsBytes()));
   } else {
     raf = await File(path).open();
-    srcBox = ISOBox.fileBox(RandomAccessFileRASource(raf));
+    srcBox = ISOBox.fileBox(FileRASource(raf));
   }
   final actual = await inspectISOBox(srcBox);
   expect(actual, expected);

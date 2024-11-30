@@ -9,7 +9,7 @@ import 'common.dart';
 Future<ISOBox> _openFile(String name) async {
   final raf =
       await File(name.startsWith('/') ? name : 'test/test_files/$name').open();
-  final src = RandomAccessFileRASource(raf);
+  final src = FileRASource(raf);
   return ISOBox.fileBox(src);
 }
 

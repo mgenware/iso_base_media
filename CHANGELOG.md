@@ -1,3 +1,7 @@
+## 4.2.0
+
+- Update `random_access_source`.
+
 ## 4.1.0
 
 - Add an optional index param to `nextChild`.

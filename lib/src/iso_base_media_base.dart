@@ -176,7 +176,7 @@ class ISOBox {
 
   /// Creates a file box from [RandomAccessFile].
   static ISOBox fileBoxFromRandomAccessFile(RandomAccessFile file) {
-    return ISOBox.fileBox(RandomAccessFileRASource(file));
+    return ISOBox.fileBox(FileRASource(file));
   }
 
   /// Creates a file box from bytes.
