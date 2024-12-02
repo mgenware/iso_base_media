@@ -1,3 +1,7 @@
+## 4.3.0
+
+- Add `ispe` and `ipma` to full boxes.
+
 ## 4.2.0
 
 - Update `random_access_source`.
