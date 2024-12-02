@@ -360,4 +360,6 @@ const _fullBoxes = {
   'prft',
   'auxC',
   'infe',
+  'ispe',
+  'ipma',
 };
