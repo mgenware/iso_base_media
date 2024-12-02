@@ -177,7 +177,7 @@ void main() {
               'type': 'hdlr',
               'headerOffset': 36,
               'dataOffset': 48,
-              'fullBoxInt32': 0,
+              'fullBoxInt32': 0
             },
             {
               'boxSize': 14,
@@ -185,7 +185,7 @@ void main() {
               'type': 'pitm',
               'headerOffset': 69,
               'dataOffset': 81,
-              'fullBoxInt32': 0,
+              'fullBoxInt32': 0
             },
             {
               'boxSize': 52,
@@ -193,7 +193,7 @@ void main() {
               'type': 'iloc',
               'headerOffset': 83,
               'dataOffset': 95,
-              'fullBoxInt32': 0,
+              'fullBoxInt32': 0
             },
             {
               'boxSize': 76,
@@ -201,7 +201,7 @@ void main() {
               'type': 'iinf',
               'headerOffset': 135,
               'dataOffset': 147,
-              'fullBoxInt32': 0,
+              'fullBoxInt32': 0
             },
             {
               'boxSize': 26,
@@ -216,7 +216,7 @@ void main() {
                   'dataSize': 6,
                   'type': 'thmb',
                   'headerOffset': 223,
-                  'dataOffset': 231,
+                  'dataOffset': 231
                 }
               ]
             },
@@ -239,37 +239,40 @@ void main() {
                       'dataSize': 100,
                       'type': 'hvcC',
                       'headerOffset': 253,
-                      'dataOffset': 261,
+                      'dataOffset': 261
                     },
                     {
                       'boxSize': 20,
-                      'dataSize': 12,
+                      'dataSize': 8,
                       'type': 'ispe',
                       'headerOffset': 361,
-                      'dataOffset': 369,
+                      'dataOffset': 373,
+                      'fullBoxInt32': 0
                     },
                     {
                       'boxSize': 107,
                       'dataSize': 99,
                       'type': 'hvcC',
                       'headerOffset': 381,
-                      'dataOffset': 389,
+                      'dataOffset': 389
                     },
                     {
                       'boxSize': 20,
-                      'dataSize': 12,
+                      'dataSize': 8,
                       'type': 'ispe',
                       'headerOffset': 488,
-                      'dataOffset': 496,
+                      'dataOffset': 500,
+                      'fullBoxInt32': 0
                     }
                   ]
                 },
                 {
                   'boxSize': 26,
-                  'dataSize': 18,
+                  'dataSize': 14,
                   'type': 'ipma',
                   'headerOffset': 508,
-                  'dataOffset': 516,
+                  'dataOffset': 520,
+                  'fullBoxInt32': 0
                 }
               ]
             }
