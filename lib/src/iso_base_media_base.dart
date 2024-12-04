@@ -37,13 +37,6 @@ Future<ISOBox?> _readChildBox(
     throw Exception('Expected 4 bytes for box size, got ${sizeBuffer.length}');
   }
   var boxSize = sizeBuffer.asByteData().getUint32(0);
-
-  final typeBuffer = await src.read(4);
-  if (typeBuffer.length < 4) {
-    throw Exception('Expected 4 bytes for box type, got ${typeBuffer.length}');
-  }
-  final type = String.fromCharCodes(typeBuffer);
-
   /**
     Note: if any box grows in excess of 2^32 bytes (> 4.2 GB), the box size can be extended
     in increments of 64 bits (18.4 EB).
@@ -64,6 +57,12 @@ Future<ISOBox?> _readChildBox(
     boxSize =
         await src.length() - await src.position() + 4 /* Size bytes size */;
   }
+
+  final typeBuffer = await src.read(4);
+  if (typeBuffer.length < 4) {
+    throw Exception('Expected 4 bytes for box type, got ${typeBuffer.length}');
+  }
+  final type = String.fromCharCodes(typeBuffer);
 
   final fullBox = isFullBoxCallback != null
       ? isFullBoxCallback(type)

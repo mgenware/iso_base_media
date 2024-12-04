@@ -1114,4 +1114,38 @@ void main() {
     expect(bb.toBytes(), await File('./test/test_files/a.heic').readAsBytes());
     await raf.close();
   });
+
+  test('Box size 0 (extends to end of file)', () async {
+    final raf = await File('./test/test_files/hdr.avif').open();
+    final fileBox = ISOBox.fileBoxFromRandomAccessFile(raf);
+    final list = (await fileBox.getDirectChildren()).map((e) => e.toDict());
+    expect(list, [
+      {
+        'boxSize': 36,
+        'dataSize': 28,
+        'type': 'ftyp',
+        'headerOffset': 0,
+        'dataOffset': 8,
+        'index': 0
+      },
+      {
+        'boxSize': 809,
+        'dataSize': 797,
+        'type': 'meta',
+        'headerOffset': 36,
+        'dataOffset': 48,
+        'fullBoxInt32': 0,
+        'index': 1
+      },
+      {
+        'boxSize': 1146016,
+        'dataSize': 1146008,
+        'type': 'mdat',
+        'headerOffset': 845,
+        'dataOffset': 853,
+        'index': 2
+      }
+    ]);
+    await raf.close();
+  });
 }
