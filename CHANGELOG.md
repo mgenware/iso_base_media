@@ -1,3 +1,7 @@
+## 4.3.1
+
+- Fix wrong box size when box size is 0.
+
 ## 4.3.0
 
 - Add `ispe` and `ipma` to full boxes.
