@@ -10,7 +10,7 @@ Future<ISOBox> _openFile(String name) async {
   final raf =
       await File(name.startsWith('/') ? name : 'test/test_files/$name').open();
   final src = FileRASource(raf);
-  return ISOBox.fileBox(src);
+  return ISOBox.fileBox(RandomAccessBinaryReader(src));
 }
 
 void main() {
@@ -25,14 +25,14 @@ void main() {
       'dataOffset': 8,
       'index': 0
     });
-    await root.src.close();
+    await root.close();
   });
 
   test('getDirectChildByTypes (empty)', () async {
     final root = await _openFile('a.heic');
     final firstMatch = await root.getDirectChildByTypes({'ftyp__', 'meta__'});
     expect(firstMatch, null);
-    await root.src.close();
+    await root.close();
   });
 
   test('getDirectChildrenByTypes', () async {
@@ -57,7 +57,7 @@ void main() {
         'index': 1
       }
     ]);
-    await root.src.close();
+    await root.close();
   });
 
   test('getDirectChildrenByAsyncFilter', () async {
@@ -84,14 +84,14 @@ void main() {
         'index': 1
       }
     ]);
-    await root.src.close();
+    await root.close();
   });
 
   test('getDirectChildrenByTypes (empty)', () async {
     final root = await _openFile('a.heic');
     final matches = await root.getDirectChildrenByTypes({'ftyp__', 'meta__'});
     expect(matches, <ISOBox>[]);
-    await root.src.close();
+    await root.close();
   });
 
   test('getChildByTypePath', () async {
@@ -106,14 +106,14 @@ void main() {
       'fullBoxInt32': 0,
       'index': 3
     });
-    await root.src.close();
+    await root.close();
   });
 
   test('getChildByTypePath (empty)', () async {
     final root = await _openFile('a.heic');
     final match = await root.getChildByTypePath(['meta__', 'iinf__']);
     expect(match, null);
-    await root.src.close();
+    await root.close();
   });
 
   test('rootBox.seek', () async {
@@ -129,7 +129,7 @@ void main() {
       'dataOffset': 8,
       'index': 0
     });
-    await root.src.close();
+    await root.close();
   });
 
   test('childBox.seek', () async {
@@ -143,7 +143,7 @@ void main() {
     final dict2 = match2!.toDict();
 
     expect(dict1, dict2);
-    await root.src.close();
+    await root.close();
   });
 
   test('boxesToBytes', () async {
@@ -280,6 +280,6 @@ void main() {
         }
       ]
     });
-    await root.src.close();
+    await root.close();
   });
 }

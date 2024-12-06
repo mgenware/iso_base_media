@@ -14,12 +14,13 @@ Future<void> testFile(String fileName, Map<String, dynamic> expected,
   final path = './test/test_files/$fileName';
   RandomAccessFile? raf;
   if (bytes != null) {
-    srcBox = ISOBox.fileBox(BytesRASource(bytes));
+    srcBox = ISOBox.fileBox(RandomAccessBinaryReader(BytesRASource(bytes)));
   } else if (readBytes == true) {
-    srcBox = ISOBox.fileBox(BytesRASource(await File(path).readAsBytes()));
+    srcBox = ISOBox.fileBox(RandomAccessBinaryReader(
+        BytesRASource(await File(path).readAsBytes())));
   } else {
     raf = await File(path).open();
-    srcBox = ISOBox.fileBox(FileRASource(raf));
+    srcBox = ISOBox.fileBox(RandomAccessBinaryReader(FileRASource(raf)));
   }
   final actual = await inspectISOBox(srcBox);
   expect(actual, expected);

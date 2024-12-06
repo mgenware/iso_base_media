@@ -1,3 +1,7 @@
+## 4.4.0
+
+- Prefer `RandomAccessBinaryReader`.
+
 ## 4.3.1
 
 - Fix wrong box size when box size is 0.
