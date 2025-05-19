@@ -1,21 +1,11 @@
-import 'dart:io';
-
 import 'package:iso_base_media/iso_base_media.dart';
-import 'package:random_access_source/random_access_source.dart';
 import 'package:test/test.dart';
 
 import 'common.dart';
 
-Future<ISOBox> _openFile(String name) async {
-  final raf =
-      await File(name.startsWith('/') ? name : 'test/test_files/$name').open();
-  final src = FileRASource(raf);
-  return ISOBox.fileBox(RandomAccessBinaryReader(src));
-}
-
 void main() {
   test('getDirectChildByTypes', () async {
-    final root = await _openFile('a.heic');
+    final root = await openFileBox('a.heic');
     final firstMatch = await root.getDirectChildByTypes({'ftyp', 'meta'});
     expect(firstMatch!.toDict(), {
       'boxSize': 24,
@@ -29,14 +19,14 @@ void main() {
   });
 
   test('getDirectChildByTypes (empty)', () async {
-    final root = await _openFile('a.heic');
+    final root = await openFileBox('a.heic');
     final firstMatch = await root.getDirectChildByTypes({'ftyp__', 'meta__'});
     expect(firstMatch, null);
     await root.close();
   });
 
   test('getDirectChildrenByTypes', () async {
-    final root = await _openFile('a.heic');
+    final root = await openFileBox('a.heic');
     final matches = await root.getDirectChildrenByTypes({'ftyp', 'meta'});
     expect(matches.map((e) => e.toDict()).toList(), [
       {
@@ -61,7 +51,7 @@ void main() {
   });
 
   test('getDirectChildrenByAsyncFilter', () async {
-    final root = await _openFile('a.heic');
+    final root = await openFileBox('a.heic');
     final matches = await root.getDirectChildrenByAsyncFilter((box) async {
       return box.type == 'ftyp' || box.type == 'meta';
     });
@@ -88,14 +78,14 @@ void main() {
   });
 
   test('getDirectChildrenByTypes (empty)', () async {
-    final root = await _openFile('a.heic');
+    final root = await openFileBox('a.heic');
     final matches = await root.getDirectChildrenByTypes({'ftyp__', 'meta__'});
     expect(matches, <ISOBox>[]);
     await root.close();
   });
 
   test('getChildByTypePath', () async {
-    final root = await _openFile('a.heic');
+    final root = await openFileBox('a.heic');
     final match = await root.getChildByTypePath(['meta', 'iinf']);
     expect(match!.toDict(), {
       'boxSize': 76,
@@ -110,14 +100,14 @@ void main() {
   });
 
   test('getChildByTypePath (empty)', () async {
-    final root = await _openFile('a.heic');
+    final root = await openFileBox('a.heic');
     final match = await root.getChildByTypePath(['meta__', 'iinf__']);
     expect(match, null);
     await root.close();
   });
 
   test('rootBox.seek', () async {
-    final root = await _openFile('a.heic');
+    final root = await openFileBox('a.heic');
     await root.getDirectChildByTypes({'ftyp', 'meta'});
     await root.seek(0);
     final firstMatch = await root.getDirectChildByTypes({'ftyp', 'meta'});
@@ -133,7 +123,7 @@ void main() {
   });
 
   test('childBox.seek', () async {
-    final root = await _openFile('a.heic');
+    final root = await openFileBox('a.heic');
     final meta = await root.getDirectChildByTypes({'meta'});
     final match1 = await meta!.getDirectChildByTypes({'iinf'});
     final dict1 = match1!.toDict();
@@ -147,7 +137,7 @@ void main() {
   });
 
   test('boxesToBytes', () async {
-    final root = await _openFile('a.heic');
+    final root = await openFileBox('a.heic');
     final matches =
         await root.getDirectChildren(filter: (box) => box.type != 'mdat');
     final bytes = await isoBoxesToBytes(matches);

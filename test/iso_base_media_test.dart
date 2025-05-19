@@ -8,7 +8,7 @@ import 'package:test/test.dart';
 
 import 'common.dart';
 
-Future<void> testFile(String fileName, Map<String, dynamic> expected,
+Future<void> _testFile(String fileName, Map<String, dynamic> expected,
     {bool? readBytes, Uint8List? bytes}) async {
   ISOBox srcBox;
   final path = './test/test_files/$fileName';
@@ -29,7 +29,7 @@ Future<void> testFile(String fileName, Map<String, dynamic> expected,
 
 void main() {
   test('MP4', () async {
-    await testFile('a.mp4', {
+    await _testFile('a.mp4', {
       'root': true,
       'children': [
         {
@@ -352,7 +352,7 @@ void main() {
   });
 
   test('HEIC', () async {
-    await testFile('a.heic', {
+    await _testFile('a.heic', {
       'root': true,
       'children': [
         {
@@ -495,7 +495,7 @@ void main() {
     bb.add(imgBytes);
     bb.add([11, 12, 13, 14, 15, 16, 17, 18, 19, 20]);
     final subView = bb.toBytes().subView(10, 10 + imgBytes.length);
-    await testFile(
+    await _testFile(
         '',
         {
           'root': true,
@@ -635,7 +635,7 @@ void main() {
   });
 
   test('Byte source', () async {
-    await testFile(
+    await _testFile(
         'a.heic',
         {
           'root': true,
