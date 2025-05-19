@@ -34,4 +34,10 @@ void main() {
         'ISOBoxFtypData(majorBrand: mp42, minorVersion: 0, compatibleBrands: [avc1, isom, mp42, avc1])');
     await root.close();
   });
+  test('Empty compat ftypes', () async {
+    final (root, ftyp) = await _ftypBox('xmp.mov');
+    expect(ftyp.toString(),
+        'ISOBoxFtypData(majorBrand: qt  , minorVersion: 537199360, compatibleBrands: [qt  ])');
+    await root.close();
+  });
 }

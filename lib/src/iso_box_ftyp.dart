@@ -35,6 +35,10 @@ extension ISOBoxFtypExtension on ISOBox {
       for (int i = 8; i < data.length; i += 4) {
         if (i + 4 <= data.length) {
           final brand = String.fromCharCodes(data.sublist(i, i + 4));
+          // Ignore \x00\x00\x00\x00
+          if (brand == '\x00\x00\x00\x00') {
+            continue;
+          }
           compatibleBrands.add(brand);
         }
       }
