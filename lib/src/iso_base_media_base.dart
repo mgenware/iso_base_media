@@ -322,8 +322,6 @@ const _fullBoxes = {
   'tsel',
   'kind',
   'meta',
-  'xml ',
-  'bxml',
   'iloc',
   'pitm',
   'ipro',
