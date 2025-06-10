@@ -72,7 +72,7 @@ Future<ISOBox?> _readChildBox(
   final box = ISOBox(false, boxSize, type, isContainer, src, headerOffset,
       dataOffset, fullBoxInt32);
 
-  await src.setPosition(dataOffset + box.dataSize);
+  await src.seek(dataOffset + box.dataSize);
   return box;
 }
 
@@ -189,7 +189,7 @@ class ISOBox {
     if (!isRootFileBox && _currentOffset - dataOffset >= dataSize) {
       return null;
     }
-    await _src.setPosition(_currentOffset);
+    await _src.seek(_currentOffset);
     final box =
         await _readChildBox(_src, isContainerCallback, isFullBoxCallback);
     _currentOffset = await _src.position();
@@ -202,16 +202,16 @@ class ISOBox {
   /// Seeks to the given offset.
   Future<void> seek(int offset) async {
     offset = dataOffset + offset;
-    await _src.setPosition(offset);
+    await _src.seek(offset);
     _currentOffset = offset;
   }
 
   /// Returns the box as bytes. This includes the header and the data.
   Future<Uint8List> toBytes() async {
     final poz = await _src.position();
-    await _src.setPosition(headerOffset);
+    await _src.seek(headerOffset);
     final boxBytes = await _src.read(boxSize);
-    await _src.setPosition(poz);
+    await _src.seek(poz);
     return boxBytes;
   }
 
@@ -245,7 +245,7 @@ class ISOBox {
 
   /// Extracts the data from the box.
   Future<Uint8List> extractData() async {
-    await _src.setPosition(dataOffset);
+    await _src.seek(dataOffset);
     return await _src.read(dataSize);
   }
 
