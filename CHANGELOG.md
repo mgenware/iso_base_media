@@ -1,3 +1,7 @@
+## 4.5.0
+
+- Remove `RandomAccessBinaryReader` layer.
+
 ## 4.4.0
 
 - Prefer `RandomAccessBinaryReader`.

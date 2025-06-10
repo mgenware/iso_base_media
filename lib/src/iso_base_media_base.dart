@@ -14,20 +14,20 @@ bool _checkIsContainerBox(
 }
 
 Future<ISOBox?> readISOBox(
-  RandomAccessBinaryReader rd, {
+  RandomAccessSource src, {
   bool Function(String type)? isContainerCallback,
   bool Function(String type)? isFullBoxCallback,
 }) async {
-  return _readChildBox(rd, isContainerCallback, isFullBoxCallback);
+  return _readChildBox(src, isContainerCallback, isFullBoxCallback);
 }
 
 Future<ISOBox?> _readChildBox(
-  RandomAccessBinaryReader rd,
+  RandomAccessSource src,
   bool Function(String type)? isContainerCallback,
   bool Function(String type)? isFullBoxCallback,
 ) async {
-  final headerOffset = await rd.source.position();
-  final sizeBuffer = await rd.readBytes(4);
+  final headerOffset = await src.position();
+  final sizeBuffer = await src.read(4);
   // Check EOF on first read.
   if (sizeBuffer.isEmpty) {
     return null;
@@ -47,15 +47,14 @@ Future<ISOBox?> _readChildBox(
     of the file.
   */
   if (boxSize == 1) {
-    final largeSizeBuffer = await rd.mustReadBytes(8);
+    final largeSizeBuffer = await src.mustRead(8);
     boxSize = largeSizeBuffer.asByteData().getUint64(0);
   } else if (boxSize == 0) {
-    boxSize = await rd.source.length() -
-        await rd.source.position() +
-        4 /* Size bytes size */;
+    boxSize =
+        await src.length() - await src.position() + 4 /* Size bytes size */;
   }
 
-  final typeBuffer = await rd.mustReadBytes(4);
+  final typeBuffer = await src.mustRead(4);
   final type = String.fromCharCodes(typeBuffer);
 
   final fullBox = isFullBoxCallback != null
@@ -65,15 +64,15 @@ Future<ISOBox?> _readChildBox(
 
   int? fullBoxInt32;
   if (fullBox) {
-    final fullBoxInt32Buffer = await rd.mustReadBytes(4);
+    final fullBoxInt32Buffer = await src.mustRead(4);
     fullBoxInt32 = fullBoxInt32Buffer.asByteData().getUint32(0);
   }
 
-  final dataOffset = await rd.source.position();
-  final box = ISOBox(false, boxSize, type, isContainer, rd, headerOffset,
+  final dataOffset = await src.position();
+  final box = ISOBox(false, boxSize, type, isContainer, src, headerOffset,
       dataOffset, fullBoxInt32);
 
-  await rd.source.setPosition(dataOffset + box.dataSize);
+  await src.setPosition(dataOffset + box.dataSize);
   return box;
 }
 
@@ -132,7 +131,7 @@ class ISOBox {
   int get currentOffset => _currentOffset;
 
   /// The source where the box is located.
-  final RandomAccessBinaryReader _rd;
+  final RandomAccessSource _src;
 
   /// Current parsing offset.
   late int _currentOffset;
@@ -147,7 +146,7 @@ class ISOBox {
     this.boxSize,
     this.type,
     this.isContainer,
-    this._rd,
+    this._src,
     this.headerOffset,
     this.dataOffset,
     this.fullBoxInt32,
@@ -156,18 +155,18 @@ class ISOBox {
   }
 
   /// Creates a file box from [RandomAccessBinaryReader].
-  static ISOBox fileBox(RandomAccessBinaryReader rd) {
-    return ISOBox(true, 0, 'root', true, rd, 0, 0, null);
+  static ISOBox fileBox(RandomAccessSource src) {
+    return ISOBox(true, 0, 'root', true, src, 0, 0, null);
   }
 
   /// Creates a file box from [RandomAccessFile].
   static ISOBox fileBoxFromRandomAccessFile(RandomAccessFile file) {
-    return ISOBox.fileBox(RandomAccessBinaryReader(FileRASource(file)));
+    return ISOBox.fileBox(FileRASource(file));
   }
 
   /// Creates a file box from bytes.
   static ISOBox fileBoxFromBytes(Uint8List bytes) {
-    return ISOBox.fileBox(RandomAccessBinaryReader(BytesRASource(bytes)));
+    return ISOBox.fileBox(BytesRASource(bytes));
   }
 
   /// Opens a file box from the given path.
@@ -190,10 +189,10 @@ class ISOBox {
     if (!isRootFileBox && _currentOffset - dataOffset >= dataSize) {
       return null;
     }
-    await _rd.source.setPosition(_currentOffset);
+    await _src.setPosition(_currentOffset);
     final box =
-        await _readChildBox(_rd, isContainerCallback, isFullBoxCallback);
-    _currentOffset = await _rd.source.position();
+        await _readChildBox(_src, isContainerCallback, isFullBoxCallback);
+    _currentOffset = await _src.position();
     if (box != null && index != null) {
       box._index = index;
     }
@@ -203,16 +202,16 @@ class ISOBox {
   /// Seeks to the given offset.
   Future<void> seek(int offset) async {
     offset = dataOffset + offset;
-    await _rd.source.setPosition(offset);
+    await _src.setPosition(offset);
     _currentOffset = offset;
   }
 
   /// Returns the box as bytes. This includes the header and the data.
   Future<Uint8List> toBytes() async {
-    final poz = await _rd.source.position();
-    await _rd.source.setPosition(headerOffset);
-    final boxBytes = await _rd.readBytes(boxSize);
-    await _rd.source.setPosition(poz);
+    final poz = await _src.position();
+    await _src.setPosition(headerOffset);
+    final boxBytes = await _src.read(boxSize);
+    await _src.setPosition(poz);
     return boxBytes;
   }
 
@@ -246,8 +245,8 @@ class ISOBox {
 
   /// Extracts the data from the box.
   Future<Uint8List> extractData() async {
-    await _rd.source.setPosition(dataOffset);
-    return await _rd.readBytes(dataSize);
+    await _src.setPosition(dataOffset);
+    return await _src.read(dataSize);
   }
 
   /// Returns the full box info.
@@ -262,7 +261,7 @@ class ISOBox {
 
   /// Closes the underlying source.
   Future<void> close() async {
-    await _rd.close();
+    await _src.close();
   }
 }
 

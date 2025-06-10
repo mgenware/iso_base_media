@@ -8,7 +8,7 @@ Future<ISOBox> openFileBox(String name) async {
   final raf =
       await File(name.startsWith('/') ? name : 'test/test_files/$name').open();
   final src = FileRASource(raf);
-  return ISOBox.fileBox(RandomAccessBinaryReader(src));
+  return ISOBox.fileBox(src);
 }
 
 Future<Map<String, dynamic>?> _inspectISOBox(
