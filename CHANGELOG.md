@@ -1,4 +1,4 @@
-## 4.5.0
+## 4.6.0
 
 - Remove `RandomAccessBinaryReader` layer.
 
