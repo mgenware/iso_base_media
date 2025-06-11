@@ -109,7 +109,7 @@ extension ISOBoxExtension on ISOBox {
           isContainerCallback: isContainerCallback,
           isFullBoxCallback: isFullBoxCallback);
     }
-    return box is ISOBox ? box : null;
+    return box;
   }
 }
 

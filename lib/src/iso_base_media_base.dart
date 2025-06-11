@@ -199,8 +199,8 @@ class ISOBox {
     return box;
   }
 
-  /// Seeks to the given offset.
-  Future<void> seek(int offset) async {
+  /// Seeks to the given offset relative to the data offset of the box.
+  Future<void> seekInData(int offset) async {
     offset = dataOffset + offset;
     await _src.seek(offset);
     _currentOffset = offset;
