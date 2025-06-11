@@ -199,11 +199,16 @@ class ISOBox {
     return box;
   }
 
-  /// Seeks to the given offset relative to the data offset of the box.
+  /// Sets the internal file position to the specified offset within the data of the box.
   Future<void> seekInData(int offset) async {
     offset = dataOffset + offset;
     await _src.seek(offset);
     _currentOffset = offset;
+  }
+
+  /// This calls [seekInData] with an offset of 0, effectively resetting the position to the start of the box data.
+  Future<void> resetPosition() async {
+    await seekInData(0);
   }
 
   /// Returns the box as bytes. This includes the header and the data.
