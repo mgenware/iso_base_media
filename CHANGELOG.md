@@ -1,3 +1,8 @@
+## 5.0.0
+
+- Add `resetPosition` to `ISOBox`.
+- **Breaking**: Rename `seek` to `seekInData`.
+
 ## 4.6.0
 
 - Remove `RandomAccessBinaryReader` layer.
