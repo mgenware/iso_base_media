@@ -1,3 +1,7 @@
+## 5.1.1
+
+- Update to `random_access_source` 3.1.0.
+
 ## 5.0.0
 
 - Add `resetPosition` to `ISOBox`.

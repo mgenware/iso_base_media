@@ -5,9 +5,8 @@ import 'package:iso_base_media/iso_base_media.dart';
 import 'package:random_access_source/random_access_source.dart';
 
 Future<ISOBox> openFileBox(String name) async {
-  final raf =
-      await File(name.startsWith('/') ? name : 'test/test_files/$name').open();
-  final src = FileRASource(raf);
+  final file = File(name.startsWith('/') ? name : 'test/test_files/$name');
+  final src = await FileRASource.load(file);
   return ISOBox.fileBox(src);
 }
 

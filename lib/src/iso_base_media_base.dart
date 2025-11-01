@@ -159,9 +159,9 @@ class ISOBox {
     return ISOBox(true, 0, 'root', true, src, 0, 0, null);
   }
 
-  /// Creates a file box from [RandomAccessFile].
-  static ISOBox fileBoxFromRandomAccessFile(RandomAccessFile file) {
-    return ISOBox.fileBox(FileRASource(file));
+  /// Creates a file box from a [File].
+  static Future<ISOBox> fileBoxFromFile(File file) async {
+    return ISOBox.fileBox(await FileRASource.load(file));
   }
 
   /// Creates a file box from bytes.
@@ -171,7 +171,7 @@ class ISOBox {
 
   /// Opens a file box from the given path.
   static Future<ISOBox> openFileBoxFromPath(String path) async {
-    return ISOBox.fileBoxFromRandomAccessFile(await File(path).open());
+    return ISOBox.fileBoxFromFile(File(path));
   }
 
   /// Returns the next child box. If the box is not a container, returns null.

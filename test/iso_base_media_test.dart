@@ -12,18 +12,16 @@ Future<void> _testFile(String fileName, Map<String, dynamic> expected,
     {bool? readBytes, Uint8List? bytes}) async {
   ISOBox srcBox;
   final path = './test/test_files/$fileName';
-  RandomAccessFile? raf;
   if (bytes != null) {
     srcBox = ISOBox.fileBox(BytesRASource(bytes));
   } else if (readBytes == true) {
     srcBox = ISOBox.fileBox(BytesRASource(await File(path).readAsBytes()));
   } else {
-    raf = await File(path).open();
-    srcBox = ISOBox.fileBox(FileRASource(raf));
+    srcBox = ISOBox.fileBox(await FileRASource.open(path));
   }
   final actual = await inspectISOBox(srcBox);
   expect(actual, expected);
-  await raf?.close();
+  await srcBox.close();
 }
 
 void main() {
@@ -775,8 +773,8 @@ void main() {
 
   test('Callback', () async {
     final list = <Object>[];
-    final raf = await File('./test/test_files/a.heic').open();
-    final fileBox = ISOBox.fileBoxFromRandomAccessFile(raf);
+    final fileBox =
+        await ISOBox.fileBoxFromFile(File('./test/test_files/a.heic'));
     await inspectISOBox(fileBox, callback: (box, depth) {
       final dict = box.toDict();
       dict['depth'] = depth;
@@ -922,13 +920,13 @@ void main() {
         'depth': 1
       }
     ]);
-    await raf.close();
+    await fileBox.close();
   });
 
   test('Callback (early exit)', () async {
     final list = <Object>[];
-    final raf = await File('./test/test_files/a.heic').open();
-    final fileBox = ISOBox.fileBoxFromRandomAccessFile(raf);
+    final fileBox =
+        await ISOBox.fileBoxFromFile(File('./test/test_files/a.heic'));
     await inspectISOBox(fileBox, callback: (box, depth) {
       final dict = box.toDict();
       dict['depth'] = depth;
@@ -965,13 +963,13 @@ void main() {
         'depth': 1
       }
     ]);
-    await raf.close();
+    await fileBox.close();
   });
 
   test('Callback (isContainerCallback)', () async {
     final list = <Object>[];
-    final raf = await File('./test/test_files/a.heic').open();
-    final fileBox = ISOBox.fileBoxFromRandomAccessFile(raf);
+    final fileBox =
+        await ISOBox.fileBoxFromFile(File('./test/test_files/a.heic'));
     await inspectISOBox(fileBox, isContainerCallback: (type) {
       if (type == 'meta') {
         return true;
@@ -1063,12 +1061,12 @@ void main() {
         'depth': 1
       }
     ]);
-    await raf.close();
+    await fileBox.close();
   });
 
   test('isFullBoxCallback', () async {
-    final raf = await File('./test/test_files/a.mp4').open();
-    final fileBox = ISOBox.fileBoxFromRandomAccessFile(raf);
+    final fileBox =
+        await ISOBox.fileBoxFromFile(File('./test/test_files/a.mp4'));
     final moov = await fileBox.getDirectChildByTypes({'moov'});
     final mvhd =
         await moov!.getDirectChildByTypes({'mvhd'}, isFullBoxCallback: (type) {
@@ -1083,12 +1081,12 @@ void main() {
       'fullBoxInt32': 0,
       'index': 0
     });
-    await raf.close();
+    await fileBox.close();
   });
 
   test('Extract data', () async {
-    final raf = await File('./test/test_files/a.heic').open();
-    final fileBox = ISOBox.fileBoxFromRandomAccessFile(raf);
+    final fileBox =
+        await ISOBox.fileBoxFromFile(File('./test/test_files/a.heic'));
     var s = '';
     await inspectISOBox(fileBox, callback: (box, depth) async {
       if (box.type == 'ispe') {
@@ -1098,12 +1096,12 @@ void main() {
       return true;
     });
     expect(s, '000005a0000003c0|000000f0000000a0|');
-    await raf.close();
+    await fileBox.close();
   });
 
   test('toBytes', () async {
-    final raf = await File('./test/test_files/a.heic').open();
-    final fileBox = ISOBox.fileBoxFromRandomAccessFile(raf);
+    final fileBox =
+        await ISOBox.fileBoxFromFile(File('./test/test_files/a.heic'));
     // Get all direct children.
     final children = await fileBox.getDirectChildren();
     final bb = BytesBuilder();
@@ -1112,12 +1110,12 @@ void main() {
     }
 
     expect(bb.toBytes(), await File('./test/test_files/a.heic').readAsBytes());
-    await raf.close();
+    await fileBox.close();
   });
 
   test('Box size 0 (extends to end of file)', () async {
-    final raf = await File('./test/test_files/hdr.avif').open();
-    final fileBox = ISOBox.fileBoxFromRandomAccessFile(raf);
+    final fileBox =
+        await ISOBox.fileBoxFromFile(File('./test/test_files/hdr.avif'));
     final list = (await fileBox.getDirectChildren()).map((e) => e.toDict());
     expect(list, [
       {
@@ -1146,6 +1144,6 @@ void main() {
         'index': 2
       }
     ]);
-    await raf.close();
+    await fileBox.close();
   });
 }
