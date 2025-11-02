@@ -1,5 +1,4 @@
 import 'dart:async';
-import 'dart:io';
 import 'dart:typed_data';
 
 import 'package:random_access_source/random_access_source.dart';
@@ -12,6 +11,8 @@ bool _checkIsContainerBox(
       ? isContainerCallback(type)
       : _containerBoxes.contains(type);
 }
+
+final bool _isJS = 1.0 is int;
 
 Future<ISOBox?> readISOBox(
   RandomAccessSource src, {
@@ -48,6 +49,12 @@ Future<ISOBox?> _readChildBox(
   */
   if (boxSize == 1) {
     final largeSizeBuffer = await src.mustRead(8);
+    // NOTE: JavaScript only supports doubles. JavaScript integers are actually
+    // doubles in the range of -2^53 to 2^53. 64-bit integers are not supported
+    // in JavaScript.
+    if (_isJS) {
+      throw Exception('Large size buffers are not supported in JavaScript.');
+    }
     boxSize = largeSizeBuffer.asByteData().getUint64(0);
   } else if (boxSize == 0) {
     boxSize =
@@ -159,8 +166,9 @@ class ISOBox {
     return ISOBox(true, 0, 'root', true, src, 0, 0, null);
   }
 
-  /// Creates a file box from a [File].
-  static Future<ISOBox> fileBoxFromFile(File file) async {
+  /// Creates a file box from a [PlatformFile] (`File` with `dart:io`,
+  /// `Blob` with `package:web`).
+  static Future<ISOBox> fileBoxFromFile(PlatformFile file) async {
     return ISOBox.fileBox(await FileRASource.load(file));
   }
 
@@ -169,9 +177,9 @@ class ISOBox {
     return ISOBox.fileBox(BytesRASource(bytes));
   }
 
-  /// Opens a file box from the given path.
+  /// Opens a file box from the given path (`dart:io`) or URL (`package:web`).
   static Future<ISOBox> openFileBoxFromPath(String path) async {
-    return ISOBox.fileBoxFromFile(File(path));
+    return ISOBox.fileBox(await FileRASource.open(path));
   }
 
   /// Returns the next child box. If the box is not a container, returns null.

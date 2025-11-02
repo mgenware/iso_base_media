@@ -1,4 +1,3 @@
-import 'dart:io';
 import 'dart:typed_data';
 
 import 'package:iso_base_media/iso_base_media.dart';
@@ -11,13 +10,12 @@ import 'common.dart';
 Future<void> _testFile(String fileName, Map<String, dynamic> expected,
     {bool? readBytes, Uint8List? bytes}) async {
   ISOBox srcBox;
-  final path = './test/test_files/$fileName';
   if (bytes != null) {
     srcBox = ISOBox.fileBox(BytesRASource(bytes));
   } else if (readBytes == true) {
-    srcBox = ISOBox.fileBox(BytesRASource(await File(path).readAsBytes()));
+    srcBox = ISOBox.fileBox(BytesRASource(await loadBytes(fileName)));
   } else {
-    srcBox = ISOBox.fileBox(await FileRASource.open(path));
+    srcBox = await openFileBox(fileName);
   }
   final actual = await inspectISOBox(srcBox);
   expect(actual, expected);
@@ -486,12 +484,13 @@ void main() {
   });
 
   test('Uint8List sub view', () async {
-    final imgBytes = await File('./test/test_files/a.heic').readAsBytes();
+    final imgBytes = await loadBytes('a.heic');
     final bb = BytesBuilder();
     bb.add([1, 2, 3, 4, 5, 6, 7, 8, 9, 10]);
     bb.add(imgBytes);
     bb.add([11, 12, 13, 14, 15, 16, 17, 18, 19, 20]);
-    final subView = bb.toBytes().subView(10, 10 + imgBytes.length);
+    final subView =
+        Uint8List.sublistView(bb.toBytes(), 10, 10 + imgBytes.length);
     await _testFile(
         '',
         {
@@ -773,8 +772,7 @@ void main() {
 
   test('Callback', () async {
     final list = <Object>[];
-    final fileBox =
-        await ISOBox.fileBoxFromFile(File('./test/test_files/a.heic'));
+    final fileBox = await openFileBox('a.heic');
     await inspectISOBox(fileBox, callback: (box, depth) {
       final dict = box.toDict();
       dict['depth'] = depth;
@@ -925,8 +923,7 @@ void main() {
 
   test('Callback (early exit)', () async {
     final list = <Object>[];
-    final fileBox =
-        await ISOBox.fileBoxFromFile(File('./test/test_files/a.heic'));
+    final fileBox = await openFileBox('a.heic');
     await inspectISOBox(fileBox, callback: (box, depth) {
       final dict = box.toDict();
       dict['depth'] = depth;
@@ -968,8 +965,7 @@ void main() {
 
   test('Callback (isContainerCallback)', () async {
     final list = <Object>[];
-    final fileBox =
-        await ISOBox.fileBoxFromFile(File('./test/test_files/a.heic'));
+    final fileBox = await openFileBox('a.heic');
     await inspectISOBox(fileBox, isContainerCallback: (type) {
       if (type == 'meta') {
         return true;
@@ -1065,8 +1061,7 @@ void main() {
   });
 
   test('isFullBoxCallback', () async {
-    final fileBox =
-        await ISOBox.fileBoxFromFile(File('./test/test_files/a.mp4'));
+    final fileBox = await openFileBox('a.mp4');
     final moov = await fileBox.getDirectChildByTypes({'moov'});
     final mvhd =
         await moov!.getDirectChildByTypes({'mvhd'}, isFullBoxCallback: (type) {
@@ -1085,8 +1080,7 @@ void main() {
   });
 
   test('Extract data', () async {
-    final fileBox =
-        await ISOBox.fileBoxFromFile(File('./test/test_files/a.heic'));
+    final fileBox = await openFileBox('a.heic');
     var s = '';
     await inspectISOBox(fileBox, callback: (box, depth) async {
       if (box.type == 'ispe') {
@@ -1100,8 +1094,7 @@ void main() {
   });
 
   test('toBytes', () async {
-    final fileBox =
-        await ISOBox.fileBoxFromFile(File('./test/test_files/a.heic'));
+    final fileBox = await openFileBox('a.heic');
     // Get all direct children.
     final children = await fileBox.getDirectChildren();
     final bb = BytesBuilder();
@@ -1109,13 +1102,12 @@ void main() {
       bb.add(await child.toBytes());
     }
 
-    expect(bb.toBytes(), await File('./test/test_files/a.heic').readAsBytes());
+    expect(bb.toBytes(), await loadBytes('a.heic'));
     await fileBox.close();
   });
 
   test('Box size 0 (extends to end of file)', () async {
-    final fileBox =
-        await ISOBox.fileBoxFromFile(File('./test/test_files/hdr.avif'));
+    final fileBox = await openFileBox('hdr.avif');
     final list = (await fileBox.getDirectChildren()).map((e) => e.toDict());
     expect(list, [
       {

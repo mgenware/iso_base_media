@@ -1,14 +1,13 @@
 import 'dart:async';
-import 'dart:io';
+import 'dart:typed_data';
 
 import 'package:iso_base_media/iso_base_media.dart';
-import 'package:random_access_source/random_access_source.dart';
 
-Future<ISOBox> openFileBox(String name) async {
-  final file = File(name.startsWith('/') ? name : 'test/test_files/$name');
-  final src = await FileRASource.load(file);
-  return ISOBox.fileBox(src);
-}
+import '_open_io.dart' if (dart.library.js_interop) '_open_web.dart' as impl;
+
+Future<ISOBox> openFileBox(String name) => impl.openFileBox(name);
+
+Future<Uint8List> loadBytes(String name) => impl.loadBytes(name);
 
 Future<Map<String, dynamic>?> _inspectISOBox(
   ISOBox box,

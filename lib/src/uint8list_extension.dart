@@ -1,10 +1,6 @@
 import 'dart:typed_data';
 
 extension Uint8ListExt on Uint8List {
-  Uint8List subView(int start, [int? end]) {
-    return Uint8List.sublistView(this, start, end);
-  }
-
   String toHex({String separator = ''}) {
     final StringBuffer buffer = StringBuffer();
     for (final byte in this) {

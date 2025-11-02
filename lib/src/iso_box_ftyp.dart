@@ -28,19 +28,17 @@ extension ISOBoxFtypExtension on ISOBox {
     if (data.isEmpty) {
       return null;
     }
-    final majorBrand = String.fromCharCodes(data.sublist(0, 4));
+    final majorBrand = String.fromCharCodes(data.take(4));
     final minorVersion = ByteData.sublistView(data, 4, 8).getUint32(0);
     final compatibleBrands = <String>[];
     if (data.length > 8) {
-      for (int i = 8; i < data.length; i += 4) {
-        if (i + 4 <= data.length) {
-          final brand = String.fromCharCodes(data.sublist(i, i + 4));
-          // Ignore \x00\x00\x00\x00
-          if (brand == '\x00\x00\x00\x00') {
-            continue;
-          }
-          compatibleBrands.add(brand);
+      for (int i = 8; i + 4 <= data.length; i += 4) {
+        final brand = String.fromCharCodes(data.skip(i).take(4));
+        // Ignore \x00\x00\x00\x00
+        if (brand == '\x00\x00\x00\x00') {
+          continue;
         }
+        compatibleBrands.add(brand);
       }
     }
     return ISOBoxFtypData(
