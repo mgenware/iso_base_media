@@ -1,3 +1,7 @@
+## 5.1.2
+
+- Add support for Web platforms.
+
 ## 5.1.1
 
 - Update to `random_access_source` 3.1.0.
