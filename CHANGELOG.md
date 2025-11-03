@@ -1,4 +1,4 @@
-## 5.1.2
+## 5.2.0
 
 - Add support for Web platforms.
 
