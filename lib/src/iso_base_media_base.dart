@@ -12,7 +12,7 @@ bool _checkIsContainerBox(
       : _containerBoxes.contains(type);
 }
 
-final bool _isJS = 1.0 is int;
+final bool _isJS = identical(1, 1.0);
 
 Future<ISOBox?> _readChildBox(
   RandomAccessSource src,

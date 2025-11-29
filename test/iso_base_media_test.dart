@@ -7,6 +7,8 @@ import 'package:test/test.dart';
 
 import 'common.dart';
 
+final bool _isJS = identical(1, 1.0);
+
 Future<void> _testFile(String fileName, Map<String, dynamic> expected,
     {bool? readBytes, Uint8List? bytes}) async {
   RandomAccessSource src;
@@ -1126,7 +1128,7 @@ void main() {
     expect(canSend(children), isTrue);
   });
 
-  test('Box size 0 (extends to end of file)', () async {
+  test('Box size 0 (1)', () async {
     final src = await loadFileSrc('hdr.avif');
     final fileBox = ISOBox.createRootBox();
     final list = (await fileBox.getDirectChildren(src)).map((e) => e.toDict());
@@ -1159,4 +1161,55 @@ void main() {
     ]);
     await src.close();
   });
+
+  test('Box size 0 (2)', () async {
+    final src = await loadFileSrc('size0_eof.mp4');
+    final fileBox = ISOBox.createRootBox();
+    final list = (await fileBox.getDirectChildren(src)).map((e) => e.toDict());
+    expect(list, [
+      {
+        'boxSize': 58,
+        'dataSize': 50,
+        'type': 'test',
+        'headerOffset': 0,
+        'dataOffset': 8,
+        'index': 0
+      }
+    ]);
+    await src.close();
+  });
+
+  test('Box size 0 (3)', () async {
+    final src = await loadFileSrc('size0_parent.mp4');
+    final fileBox = ISOBox.createRootBox();
+    final list = (await fileBox.getDirectChildren(src)).map((e) => e.toDict());
+    expect(list, [
+      {
+        'boxSize': 46,
+        'dataSize': 38,
+        'type': 'pare',
+        'headerOffset': 0,
+        'dataOffset': 8,
+        'index': 0
+      }
+    ]);
+    await src.close();
+  });
+
+  test('Box size 1', () async {
+    final src = await loadFileSrc('size1.mp4');
+    final fileBox = ISOBox.createRootBox();
+    final list = (await fileBox.getDirectChildren(src)).map((e) => e.toDict());
+    expect(list, [
+      {
+        'boxSize': 116,
+        'dataSize': 108,
+        'type': 'test',
+        'headerOffset': 0,
+        'dataOffset': 16,
+        'index': 0
+      }
+    ]);
+    await src.close();
+  }, skip: _isJS);
 }
