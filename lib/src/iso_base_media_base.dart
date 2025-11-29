@@ -159,7 +159,7 @@ class ISOBox {
 
   /// Creates a file box from [RandomAccessBinaryReader].
   static ISOBox createRootBox() {
-    return ISOBox(true, 0, 'root', true, 0, 0, null);
+    return ISOBox(true, 0, '', true, 0, 0, null);
   }
 
   /// Returns the next child box. If the box is not a container, returns null.
