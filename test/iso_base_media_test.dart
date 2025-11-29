@@ -9,17 +9,20 @@ import 'common.dart';
 
 Future<void> _testFile(String fileName, Map<String, dynamic> expected,
     {bool? readBytes, Uint8List? bytes}) async {
-  ISOBox srcBox;
+  RandomAccessSource src;
   if (bytes != null) {
-    srcBox = ISOBox.fileBox(BytesRASource(bytes));
+    src = BytesRASource(bytes);
   } else if (readBytes == true) {
-    srcBox = ISOBox.fileBox(BytesRASource(await loadBytes(fileName)));
+    src = await loadBytesSrc(fileName);
   } else {
-    srcBox = await openFileBox(fileName);
+    src = await loadFileSrc(fileName);
   }
-  final actual = await inspectISOBox(srcBox);
-  expect(actual, expected);
-  await srcBox.close();
+  try {
+    final actual = await inspectISOBox(src, ISOBox.createRootBox());
+    expect(actual, expected);
+  } finally {
+    await src.close();
+  }
 }
 
 void main() {
@@ -484,7 +487,8 @@ void main() {
   });
 
   test('Uint8List sub view', () async {
-    final imgBytes = await loadBytes('a.heic');
+    final imgBytesSrc = await loadBytesSrc('a.heic');
+    final imgBytes = await imgBytesSrc.readToEnd();
     final bb = BytesBuilder();
     bb.add([1, 2, 3, 4, 5, 6, 7, 8, 9, 10]);
     bb.add(imgBytes);
@@ -628,6 +632,7 @@ void main() {
           ]
         },
         bytes: subView);
+    await imgBytesSrc.close();
   });
 
   test('Byte source', () async {
@@ -772,8 +777,9 @@ void main() {
 
   test('Callback', () async {
     final list = <Object>[];
-    final fileBox = await openFileBox('a.heic');
-    await inspectISOBox(fileBox, callback: (box, depth) {
+    final src = await loadFileSrc('a.heic');
+    final fileBox = ISOBox.createRootBox();
+    await inspectISOBox(src, fileBox, callback: (box, depth) {
       final dict = box.toDict();
       dict['depth'] = depth;
       list.add(dict);
@@ -918,13 +924,14 @@ void main() {
         'depth': 1
       }
     ]);
-    await fileBox.close();
+    await src.close();
   });
 
   test('Callback (early exit)', () async {
     final list = <Object>[];
-    final fileBox = await openFileBox('a.heic');
-    await inspectISOBox(fileBox, callback: (box, depth) {
+    final src = await loadFileSrc('a.heic');
+    final fileBox = ISOBox.createRootBox();
+    await inspectISOBox(src, fileBox, callback: (box, depth) {
       final dict = box.toDict();
       dict['depth'] = depth;
       list.add(dict);
@@ -960,13 +967,14 @@ void main() {
         'depth': 1
       }
     ]);
-    await fileBox.close();
+    await src.close();
   });
 
   test('Callback (isContainerCallback)', () async {
     final list = <Object>[];
-    final fileBox = await openFileBox('a.heic');
-    await inspectISOBox(fileBox, isContainerCallback: (type) {
+    final src = await loadFileSrc('a.heic');
+    final fileBox = ISOBox.createRootBox();
+    await inspectISOBox(src, fileBox, isContainerCallback: (type) {
       if (type == 'meta') {
         return true;
       }
@@ -1057,14 +1065,15 @@ void main() {
         'depth': 1
       }
     ]);
-    await fileBox.close();
+    await src.close();
   });
 
   test('isFullBoxCallback', () async {
-    final fileBox = await openFileBox('a.mp4');
-    final moov = await fileBox.getDirectChildByTypes({'moov'});
-    final mvhd =
-        await moov!.getDirectChildByTypes({'mvhd'}, isFullBoxCallback: (type) {
+    final src = await loadFileSrc('a.mp4');
+    final fileBox = ISOBox.createRootBox();
+    final moov = await fileBox.getDirectChildByTypes(src, {'moov'});
+    final mvhd = await moov!.getDirectChildByTypes(src, {'mvhd'},
+        isFullBoxCallback: (type) {
       return type == 'mvhd';
     });
     expect(mvhd!.toDict(), {
@@ -1076,39 +1085,44 @@ void main() {
       'fullBoxInt32': 0,
       'index': 0
     });
-    await fileBox.close();
+    await src.close();
   });
 
   test('Extract data', () async {
-    final fileBox = await openFileBox('a.heic');
+    final src = await loadFileSrc('a.heic');
+    final fileBox = ISOBox.createRootBox();
     var s = '';
-    await inspectISOBox(fileBox, callback: (box, depth) async {
+    await inspectISOBox(src, fileBox, callback: (box, depth) async {
       if (box.type == 'ispe') {
-        final data = await box.extractData();
+        final data = await box.extractData(src);
         s += '${data.toHex()}|';
       }
       return true;
     });
     expect(s, '000005a0000003c0|000000f0000000a0|');
-    await fileBox.close();
+    await src.close();
   });
 
   test('toBytes', () async {
-    final fileBox = await openFileBox('a.heic');
+    final src = await loadFileSrc('a.heic');
+    final fileBox = ISOBox.createRootBox();
     // Get all direct children.
-    final children = await fileBox.getDirectChildren();
+    final children = await fileBox.getDirectChildren(src);
     final bb = BytesBuilder();
     for (final child in children) {
-      bb.add(await child.toBytes());
+      bb.add(await child.toBytes(src));
     }
 
-    expect(bb.toBytes(), await loadBytes('a.heic'));
-    await fileBox.close();
+    final src2 = await loadFileSrc('a.heic');
+    expect(bb.toBytes(), await src2.readToEnd());
+    await src.close();
+    await src2.close();
   });
 
   test('Box size 0 (extends to end of file)', () async {
-    final fileBox = await openFileBox('hdr.avif');
-    final list = (await fileBox.getDirectChildren()).map((e) => e.toDict());
+    final src = await loadFileSrc('hdr.avif');
+    final fileBox = ISOBox.createRootBox();
+    final list = (await fileBox.getDirectChildren(src)).map((e) => e.toDict());
     expect(list, [
       {
         'boxSize': 36,
@@ -1136,6 +1150,6 @@ void main() {
         'index': 2
       }
     ]);
-    await fileBox.close();
+    await src.close();
   });
 }

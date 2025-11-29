@@ -1,12 +1,14 @@
 import 'package:iso_base_media/iso_base_media.dart';
+import 'package:random_access_source/random_access_source.dart';
 import 'package:test/test.dart';
 
 import 'common.dart';
 
 void main() {
   test('getDirectChildByTypes', () async {
-    final root = await openFileBox('a.heic');
-    final firstMatch = await root.getDirectChildByTypes({'ftyp', 'meta'});
+    final src = await loadFileSrc('a.heic');
+    final root = ISOBox.createRootBox();
+    final firstMatch = await root.getDirectChildByTypes(src, {'ftyp', 'meta'});
     expect(firstMatch!.toDict(), {
       'boxSize': 24,
       'dataSize': 16,
@@ -15,19 +17,22 @@ void main() {
       'dataOffset': 8,
       'index': 0
     });
-    await root.close();
+    await src.close();
   });
 
   test('getDirectChildByTypes (empty)', () async {
-    final root = await openFileBox('a.heic');
-    final firstMatch = await root.getDirectChildByTypes({'ftyp__', 'meta__'});
+    final root = ISOBox.createRootBox();
+    final src = await loadFileSrc('a.heic');
+    final firstMatch =
+        await root.getDirectChildByTypes(src, {'ftyp__', 'meta__'});
     expect(firstMatch, null);
-    await root.close();
+    await src.close();
   });
 
   test('getDirectChildrenByTypes', () async {
-    final root = await openFileBox('a.heic');
-    final matches = await root.getDirectChildrenByTypes({'ftyp', 'meta'});
+    final root = ISOBox.createRootBox();
+    final src = await loadFileSrc('a.heic');
+    final matches = await root.getDirectChildrenByTypes(src, {'ftyp', 'meta'});
     expect(matches.map((e) => e.toDict()).toList(), [
       {
         'boxSize': 24,
@@ -47,12 +52,13 @@ void main() {
         'index': 1
       }
     ]);
-    await root.close();
+    await src.close();
   });
 
   test('getDirectChildrenByAsyncFilter', () async {
-    final root = await openFileBox('a.heic');
-    final matches = await root.getDirectChildrenByAsyncFilter((box) async {
+    final root = ISOBox.createRootBox();
+    final src = await loadFileSrc('a.heic');
+    final matches = await root.getDirectChildrenByAsyncFilter(src, (box) async {
       return box.type == 'ftyp' || box.type == 'meta';
     });
     expect(matches.map((e) => e.toDict()).toList(), [
@@ -74,19 +80,22 @@ void main() {
         'index': 1
       }
     ]);
-    await root.close();
+    await src.close();
   });
 
   test('getDirectChildrenByTypes (empty)', () async {
-    final root = await openFileBox('a.heic');
-    final matches = await root.getDirectChildrenByTypes({'ftyp__', 'meta__'});
+    final root = ISOBox.createRootBox();
+    final src = await loadFileSrc('a.heic');
+    final matches =
+        await root.getDirectChildrenByTypes(src, {'ftyp__', 'meta__'});
     expect(matches, <ISOBox>[]);
-    await root.close();
+    await src.close();
   });
 
   test('getChildByTypePath', () async {
-    final root = await openFileBox('a.heic');
-    final match = await root.getChildByTypePath(['meta', 'iinf']);
+    final root = ISOBox.createRootBox();
+    final src = await loadFileSrc('a.heic');
+    final match = await root.getChildByTypePath(src, ['meta', 'iinf']);
     expect(match!.toDict(), {
       'boxSize': 76,
       'dataSize': 64,
@@ -96,21 +105,23 @@ void main() {
       'fullBoxInt32': 0,
       'index': 3
     });
-    await root.close();
+    await src.close();
   });
 
   test('getChildByTypePath (empty)', () async {
-    final root = await openFileBox('a.heic');
-    final match = await root.getChildByTypePath(['meta__', 'iinf__']);
+    final root = ISOBox.createRootBox();
+    final src = await loadFileSrc('a.heic');
+    final match = await root.getChildByTypePath(src, ['meta__', 'iinf__']);
     expect(match, null);
-    await root.close();
+    await src.close();
   });
 
   test('rootBox.seekInData', () async {
-    final root = await openFileBox('a.heic');
-    await root.getDirectChildByTypes({'ftyp', 'meta'});
-    await root.seekInData(0);
-    final firstMatch = await root.getDirectChildByTypes({'ftyp', 'meta'});
+    final root = ISOBox.createRootBox();
+    final src = await loadFileSrc('a.heic');
+    await root.getDirectChildByTypes(src, {'ftyp', 'meta'});
+    await root.seekInData(src, 0);
+    final firstMatch = await root.getDirectChildByTypes(src, {'ftyp', 'meta'});
     expect(firstMatch!.toDict(), {
       'boxSize': 24,
       'dataSize': 16,
@@ -119,31 +130,35 @@ void main() {
       'dataOffset': 8,
       'index': 0
     });
-    await root.close();
+    await src.close();
   });
 
   test('childBox.seekInData', () async {
-    final root = await openFileBox('a.heic');
-    final meta = await root.getDirectChildByTypes({'meta'});
-    final match1 = await meta!.getDirectChildByTypes({'iinf'});
+    final root = ISOBox.createRootBox();
+    final src = await loadFileSrc('a.heic');
+    final meta = await root.getDirectChildByTypes(src, {'meta'});
+    final match1 = await meta!.getDirectChildByTypes(src, {'iinf'});
     final dict1 = match1!.toDict();
 
-    await meta.seekInData(0);
-    final match2 = await meta.getDirectChildByTypes({'iinf'});
+    await meta.seekInData(src, 0);
+    final match2 = await meta.getDirectChildByTypes(src, {'iinf'});
     final dict2 = match2!.toDict();
 
     expect(dict1, dict2);
-    await root.close();
+    await src.close();
   });
 
   test('boxesToBytes', () async {
-    final root = await openFileBox('a.heic');
+    final root = ISOBox.createRootBox();
+    final src = await loadFileSrc('a.heic');
     final matches =
-        await root.getDirectChildren(filter: (box) => box.type != 'mdat');
-    final bytes = await isoBoxesToBytes(matches);
+        await root.getDirectChildren(src, filter: (box) => box.type != 'mdat');
+    await root.getDirectChildren(src, filter: (box) => box.type != 'mdat');
+    final bytes = await isoBoxesToBytes(src, matches);
 
-    final newBox = ISOBox.fileBoxFromBytes(bytes);
-    expect(await inspectISOBox(newBox), {
+    final newSrc = BytesRASource(bytes);
+    final newBox = ISOBox.createRootBox();
+    expect(await inspectISOBox(newSrc, newBox), {
       'root': true,
       'children': [
         {
@@ -270,6 +285,7 @@ void main() {
         }
       ]
     });
-    await root.close();
+    await src.close();
+    await newSrc.close();
   });
 }

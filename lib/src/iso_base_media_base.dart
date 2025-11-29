@@ -76,7 +76,7 @@ Future<ISOBox?> _readChildBox(
   }
 
   final dataOffset = await src.position();
-  final box = ISOBox(false, boxSize, type, isContainer, src, headerOffset,
+  final box = ISOBox(false, boxSize, type, isContainer, headerOffset,
       dataOffset, fullBoxInt32);
 
   await src.seek(dataOffset + box.dataSize);
@@ -137,9 +137,6 @@ class ISOBox {
   /// Gets the current offset of the box within the source.
   int get currentOffset => _currentOffset;
 
-  /// The source where the box is located.
-  final RandomAccessSource _src;
-
   /// Current parsing offset.
   late int _currentOffset;
 
@@ -153,7 +150,6 @@ class ISOBox {
     this.boxSize,
     this.type,
     this.isContainer,
-    this._src,
     this.headerOffset,
     this.dataOffset,
     this.fullBoxInt32,
@@ -162,30 +158,15 @@ class ISOBox {
   }
 
   /// Creates a file box from [RandomAccessBinaryReader].
-  static ISOBox fileBox(RandomAccessSource src) {
-    return ISOBox(true, 0, 'root', true, src, 0, 0, null);
-  }
-
-  /// Creates a file box from a [PlatformFile] (`File` with `dart:io`,
-  /// `Blob` with `package:web`).
-  static Future<ISOBox> fileBoxFromFile(PlatformFile file) async {
-    return ISOBox.fileBox(await FileRASource.load(file));
-  }
-
-  /// Creates a file box from bytes.
-  static ISOBox fileBoxFromBytes(Uint8List bytes) {
-    return ISOBox.fileBox(BytesRASource(bytes));
-  }
-
-  /// Opens a file box from the given path (`dart:io`) or URL (`package:web`).
-  static Future<ISOBox> openFileBoxFromPath(String path) async {
-    return ISOBox.fileBox(await FileRASource.open(path));
+  static ISOBox createRootBox() {
+    return ISOBox(true, 0, 'root', true, 0, 0, null);
   }
 
   /// Returns the next child box. If the box is not a container, returns null.
   /// If [isContainerCallback] is provided, it will be used to determine if the box is a container.
   /// If [isFullBoxCallback] is provided, it will be used to determine if the box is a full box.
-  Future<ISOBox?> nextChild({
+  Future<ISOBox?> nextChild(
+    RandomAccessSource src, {
     bool Function(String type)? isContainerCallback,
     bool Function(String type)? isFullBoxCallback,
     int? index,
@@ -197,10 +178,10 @@ class ISOBox {
     if (!isRootFileBox && _currentOffset - dataOffset >= dataSize) {
       return null;
     }
-    await _src.seek(_currentOffset);
+    await src.seek(_currentOffset);
     final box =
-        await _readChildBox(_src, isContainerCallback, isFullBoxCallback);
-    _currentOffset = await _src.position();
+        await _readChildBox(src, isContainerCallback, isFullBoxCallback);
+    _currentOffset = await src.position();
     if (box != null && index != null) {
       box._index = index;
     }
@@ -208,23 +189,27 @@ class ISOBox {
   }
 
   /// Sets the internal file position to the specified offset within the data of the box.
-  Future<void> seekInData(int offset) async {
+  Future<void> seekInData(RandomAccessSource src, int offset) async {
     offset = dataOffset + offset;
-    await _src.seek(offset);
+    await src.seek(offset);
     _currentOffset = offset;
   }
 
   /// This calls [seekInData] with an offset of 0, effectively resetting the position to the start of the box data.
-  Future<void> resetPosition() async {
-    await seekInData(0);
+  Future<void> resetPosition(
+    RandomAccessSource src,
+  ) async {
+    await seekInData(src, 0);
   }
 
   /// Returns the box as bytes. This includes the header and the data.
-  Future<Uint8List> toBytes() async {
-    final poz = await _src.position();
-    await _src.seek(headerOffset);
-    final boxBytes = await _src.read(boxSize);
-    await _src.seek(poz);
+  Future<Uint8List> toBytes(
+    RandomAccessSource src,
+  ) async {
+    final poz = await src.position();
+    await src.seek(headerOffset);
+    final boxBytes = await src.read(boxSize);
+    await src.seek(poz);
     return boxBytes;
   }
 
@@ -257,9 +242,11 @@ class ISOBox {
   }
 
   /// Extracts the data from the box.
-  Future<Uint8List> extractData() async {
-    await _src.seek(dataOffset);
-    return await _src.read(dataSize);
+  Future<Uint8List> extractData(
+    RandomAccessSource src,
+  ) async {
+    await src.seek(dataOffset);
+    return await src.read(dataSize);
   }
 
   /// Returns the full box info.
@@ -270,11 +257,6 @@ class ISOBox {
     final version = (fullBoxInt32! >> 24) & 0xff;
     final flags = fullBoxInt32! & 0xffffff;
     return ISOFullBoxInfo(version, flags);
-  }
-
-  /// Closes the underlying source.
-  Future<void> close() async {
-    await _src.close();
   }
 }
 

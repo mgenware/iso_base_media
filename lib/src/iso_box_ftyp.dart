@@ -1,5 +1,7 @@
 import 'dart:typed_data';
 
+import 'package:random_access_source/random_access_source.dart';
+
 import '../iso_base_media.dart';
 
 class ISOBoxFtypData {
@@ -20,11 +22,11 @@ class ISOBoxFtypData {
 }
 
 extension ISOBoxFtypExtension on ISOBox {
-  Future<ISOBoxFtypData?> parseFtyp() async {
+  Future<ISOBoxFtypData?> parseFtyp(RandomAccessSource src) async {
     if (type != 'ftyp') {
       return null;
     }
-    final data = await extractData();
+    final data = await extractData(src);
     if (data.isEmpty) {
       return null;
     }

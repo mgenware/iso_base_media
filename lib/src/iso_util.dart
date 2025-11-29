@@ -1,5 +1,7 @@
 import 'dart:typed_data';
 
+import 'package:random_access_source/random_access_source.dart';
+
 import '../iso_base_media.dart';
 
 extension ISOBoxExtension on ISOBox {
@@ -7,7 +9,8 @@ extension ISOBoxExtension on ISOBox {
   /// [isContainerCallback] is a callback to determine if a box is a container.
   /// [isFullBoxCallback] is a callback to determine if a box is a full box.
   /// [filter] is a callback to filter boxes.
-  Future<List<ISOBox>> getDirectChildren({
+  Future<List<ISOBox>> getDirectChildren(
+    RandomAccessSource src, {
     bool Function(String type)? isContainerCallback,
     bool Function(String type)? isFullBoxCallback,
     bool Function(ISOBox box)? filter,
@@ -17,6 +20,7 @@ extension ISOBoxExtension on ISOBox {
     var i = 0;
     do {
       child = await nextChild(
+        src,
         isContainerCallback: isContainerCallback,
         isFullBoxCallback: isFullBoxCallback,
         index: i++,
@@ -32,6 +36,7 @@ extension ISOBoxExtension on ISOBox {
   /// [isContainerCallback] is a callback to determine if a box is a container.
   /// [isFullBoxCallback] is a callback to determine if a box is a full box.
   Future<List<ISOBox>> getDirectChildrenByAsyncFilter(
+    RandomAccessSource src,
     Future<bool> Function(ISOBox box) filter, {
     bool Function(String type)? isContainerCallback,
     bool Function(String type)? isFullBoxCallback,
@@ -41,6 +46,7 @@ extension ISOBoxExtension on ISOBox {
     var i = 0;
     do {
       child = await nextChild(
+        src,
         isContainerCallback: isContainerCallback,
         isFullBoxCallback: isFullBoxCallback,
         index: i++,
@@ -57,6 +63,7 @@ extension ISOBoxExtension on ISOBox {
   /// [isContainerCallback] is a callback to determine if a box is a container.
   /// [isFullBoxCallback] is a callback to determine if a box is a full box.
   Future<ISOBox?> getDirectChildByTypes(
+    RandomAccessSource src,
     Set<String> types, {
     bool Function(String type)? isContainerCallback,
     bool Function(String type)? isFullBoxCallback,
@@ -66,6 +73,7 @@ extension ISOBoxExtension on ISOBox {
     var i = 0;
     do {
       child = await nextChild(
+        src,
         isContainerCallback: isContainerCallback,
         isFullBoxCallback: isFullBoxCallback,
         index: i++,
@@ -82,11 +90,12 @@ extension ISOBoxExtension on ISOBox {
   /// [isContainerCallback] is a callback to determine if a box is a container.
   /// [isFullBoxCallback] is a callback to determine if a box is a full box.
   Future<List<ISOBox>> getDirectChildrenByTypes(
+    RandomAccessSource src,
     Set<String> types, {
     bool Function(String type)? isContainerCallback,
     bool Function(String type)? isFullBoxCallback,
   }) async {
-    return getDirectChildren(
+    return getDirectChildren(src,
         isContainerCallback: isContainerCallback,
         isFullBoxCallback: isFullBoxCallback,
         filter: (box) => types.isEmpty || types.contains(box.type));
@@ -96,6 +105,7 @@ extension ISOBoxExtension on ISOBox {
   /// [isContainerCallback] is a callback to determine if a box is a container.
   /// [isFullBoxCallback] is a callback to determine if a box is a full box.
   Future<ISOBox?> getChildByTypePath(
+    RandomAccessSource src,
     List<String> path, {
     bool Function(String type)? isContainerCallback,
     bool Function(String type)? isFullBoxCallback,
@@ -105,7 +115,7 @@ extension ISOBoxExtension on ISOBox {
       if (box == null) {
         return null;
       }
-      box = await box.getDirectChildByTypes(<String>{type},
+      box = await box.getDirectChildByTypes(src, <String>{type},
           isContainerCallback: isContainerCallback,
           isFullBoxCallback: isFullBoxCallback);
     }
@@ -114,10 +124,11 @@ extension ISOBoxExtension on ISOBox {
 }
 
 /// Write a list of boxes to bytes.
-Future<Uint8List> isoBoxesToBytes(List<ISOBox> boxes) async {
+Future<Uint8List> isoBoxesToBytes(
+    RandomAccessSource src, List<ISOBox> boxes) async {
   final bb = BytesBuilder();
   for (final box in boxes) {
-    bb.add(await box.toBytes());
+    bb.add(await box.toBytes(src));
   }
   return bb.toBytes();
 }
