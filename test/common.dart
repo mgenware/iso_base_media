@@ -3,11 +3,14 @@ import 'dart:async';
 import 'package:iso_base_media/iso_base_media.dart';
 import 'package:random_access_source/random_access_source.dart';
 
-import '_open_io.dart' if (dart.library.js_interop) '_open_web.dart' as impl;
+import '_common_io.dart' if (dart.library.js_interop) '_common_web.dart'
+    as impl;
 
 Future<RandomAccessSource> loadFileSrc(String name) => impl.loadFileSrc(name);
 
 Future<RandomAccessSource> loadBytesSrc(String name) => impl.loadBytesSrc(name);
+
+bool canSend(Object? o) => impl.canSend(o);
 
 Future<Map<String, dynamic>?> _inspectISOBox(
   RandomAccessSource src,

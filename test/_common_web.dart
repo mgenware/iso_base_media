@@ -18,3 +18,5 @@ Future<RandomAccessSource> loadBytesSrc(String name) async {
   final bytes = (await res.bytes().toDart).toDart;
   return BytesRASource(bytes);
 }
+
+bool canSend(Object? value) => true;

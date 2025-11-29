@@ -1119,6 +1119,13 @@ void main() {
     await src2.close();
   });
 
+  test('Can be sent to Isolates', () async {
+    final src = await loadFileSrc('a.heic');
+    final fileBox = ISOBox.createRootBox();
+    final children = await fileBox.getDirectChildren(src);
+    expect(canSend(children), isTrue);
+  });
+
   test('Box size 0 (extends to end of file)', () async {
     final src = await loadFileSrc('hdr.avif');
     final fileBox = ISOBox.createRootBox();
