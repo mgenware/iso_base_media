@@ -1,3 +1,7 @@
+## 6.1.0
+
+- Support special box sizes.
+
 ## 6.0.0
 
 - Move `RandomAccessSource` out of `ISOBox`.
