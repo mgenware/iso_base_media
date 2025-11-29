@@ -158,9 +158,9 @@ class ISOBox {
     return ISOBox(true, 0, '', true, 0, 0, null);
   }
 
-  /// Returns the next child box. If the box is not a container, returns null.
-  /// If [isContainerCallback] is provided, it will be used to determine if the box is a container.
-  /// If [isFullBoxCallback] is provided, it will be used to determine if the box is a full box.
+  /// Returns the next child box. If this box is not a container, returns null.
+  /// [isContainerCallback] is a callback to determine if a box is a container.
+  /// [isFullBoxCallback] is a callback to determine if a box is a full box.
   Future<ISOBox?> nextChild(
     RandomAccessSource src, {
     bool Function(String type)? isContainerCallback,
