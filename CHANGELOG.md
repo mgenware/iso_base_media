@@ -1,3 +1,9 @@
+## 6.0.0
+
+- Move `RandomAccessSource` out of `ISOBox`.
+- `ISOBox` now can be sent to Dart isolates.
+- All `ISOBox` methods (including extension methods) have a explicit `RandomAccessSource` parameter.
+
 ## 5.2.0
 
 - Add support for Web platforms.
