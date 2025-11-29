@@ -14,16 +14,9 @@ bool _checkIsContainerBox(
 
 final bool _isJS = 1.0 is int;
 
-Future<ISOBox?> readISOBox(
-  RandomAccessSource src, {
-  bool Function(String type)? isContainerCallback,
-  bool Function(String type)? isFullBoxCallback,
-}) async {
-  return _readChildBox(src, isContainerCallback, isFullBoxCallback);
-}
-
 Future<ISOBox?> _readChildBox(
   RandomAccessSource src,
+  ISOBox parent,
   bool Function(String type)? isContainerCallback,
   bool Function(String type)? isFullBoxCallback,
 ) async {
@@ -38,6 +31,10 @@ Future<ISOBox?> _readChildBox(
     throw Exception('Expected 4 bytes for box size, got ${sizeBuffer.length}');
   }
   var boxSize = sizeBuffer.asByteData().getUint32(0);
+  // Read box type immediately after size.
+  final typeBuffer = await src.mustRead(4);
+  final type = String.fromCharCodes(typeBuffer);
+
   /**
     Note: if any box grows in excess of 2^32 bytes (> 4.2 GB), the box size can be extended
     in increments of 64 bits (18.4 EB).
@@ -57,12 +54,11 @@ Future<ISOBox?> _readChildBox(
     }
     boxSize = largeSizeBuffer.asByteData().getUint64(0);
   } else if (boxSize == 0) {
-    boxSize =
-        await src.length() - await src.position() + 4 /* Size bytes size */;
+    final parentEnd = parent.isRootFileBox
+        ? await src.length()
+        : parent.headerOffset + parent.boxSize;
+    boxSize = parentEnd - headerOffset;
   }
-
-  final typeBuffer = await src.mustRead(4);
-  final type = String.fromCharCodes(typeBuffer);
 
   final fullBox = isFullBoxCallback != null
       ? isFullBoxCallback(type)
@@ -180,7 +176,7 @@ class ISOBox {
     }
     await src.seek(_currentOffset);
     final box =
-        await _readChildBox(src, isContainerCallback, isFullBoxCallback);
+        await _readChildBox(src, this, isContainerCallback, isFullBoxCallback);
     _currentOffset = await src.position();
     if (box != null && index != null) {
       box._index = index;
