@@ -1,3 +1,7 @@
+## 6.2.0
+
+- Add `skipOffset` to `ISOBox.nextChild` to skip bytes before reading the next child box.
+
 ## 6.1.0
 
 - Support special box sizes.

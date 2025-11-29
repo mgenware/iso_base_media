@@ -130,10 +130,7 @@ class ISOBox {
   /// The offset of the data in the file.
   final int dataOffset;
 
-  /// Gets the current offset of the box within the source.
-  int get currentOffset => _currentOffset;
-
-  /// Current parsing offset.
+  /// Current parsing offset. Used in parsing child boxes.
   late int _currentOffset;
 
   int _index = -1;
@@ -153,19 +150,23 @@ class ISOBox {
     _currentOffset = dataOffset;
   }
 
-  /// Creates a file box from [RandomAccessBinaryReader].
+  /// Creates a root [ISOBox].
   static ISOBox createRootBox() {
     return ISOBox(true, 0, '', true, 0, 0, null);
   }
 
   /// Returns the next child box. If this box is not a container, returns null.
+  /// [src] is the source to read from.
   /// [isContainerCallback] is a callback to determine if a box is a container.
   /// [isFullBoxCallback] is a callback to determine if a box is a full box.
+  /// [index] is an optional index to set on the returned box.
+  /// [skipOffset] is an optional offset to skip before reading the next child box.
   Future<ISOBox?> nextChild(
     RandomAccessSource src, {
     bool Function(String type)? isContainerCallback,
     bool Function(String type)? isFullBoxCallback,
     int? index,
+    int skipOffset = 0,
   }) async {
     if (!isContainer) {
       return null;
@@ -174,7 +175,7 @@ class ISOBox {
     if (!isRootFileBox && _currentOffset - dataOffset >= dataSize) {
       return null;
     }
-    await src.seek(_currentOffset);
+    await src.seek(_currentOffset + skipOffset);
     final box =
         await _readChildBox(src, this, isContainerCallback, isFullBoxCallback);
     _currentOffset = await src.position();
@@ -184,18 +185,18 @@ class ISOBox {
     return box;
   }
 
-  /// Sets the internal file position to the specified offset within the data of the box.
-  Future<void> seekInData(RandomAccessSource src, int offset) async {
+  /// Sets the internal file position to the specified offset within the content of the box.
+  Future<void> seekInContent(RandomAccessSource src, int offset) async {
     offset = dataOffset + offset;
     await src.seek(offset);
     _currentOffset = offset;
   }
 
-  /// This calls [seekInData] with an offset of 0, effectively resetting the position to the start of the box data.
+  /// This calls [seekInContent] with an offset of 0, effectively resetting the position to the start of the box data.
   Future<void> resetPosition(
     RandomAccessSource src,
   ) async {
-    await seekInData(src, 0);
+    await seekInContent(src, 0);
   }
 
   /// Returns the box as bytes. This includes the header and the data.
@@ -241,8 +242,11 @@ class ISOBox {
   Future<Uint8List> extractData(
     RandomAccessSource src,
   ) async {
+    final poz = await src.position();
     await src.seek(dataOffset);
-    return await src.read(dataSize);
+    final data = await src.read(dataSize);
+    await src.seek(poz);
+    return data;
   }
 
   /// Returns the full box info.

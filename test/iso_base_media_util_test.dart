@@ -116,11 +116,11 @@ void main() {
     await src.close();
   });
 
-  test('rootBox.seekInData', () async {
+  test('rootBox.seekInContent', () async {
     final root = ISOBox.createRootBox();
     final src = await loadFileSrc('a.heic');
     await root.getDirectChildByTypes(src, {'ftyp', 'meta'});
-    await root.seekInData(src, 0);
+    await root.seekInContent(src, 0);
     final firstMatch = await root.getDirectChildByTypes(src, {'ftyp', 'meta'});
     expect(firstMatch!.toDict(), {
       'boxSize': 24,
@@ -133,14 +133,14 @@ void main() {
     await src.close();
   });
 
-  test('childBox.seekInData', () async {
+  test('childBox.seekInContent', () async {
     final root = ISOBox.createRootBox();
     final src = await loadFileSrc('a.heic');
     final meta = await root.getDirectChildByTypes(src, {'meta'});
     final match1 = await meta!.getDirectChildByTypes(src, {'iinf'});
     final dict1 = match1!.toDict();
 
-    await meta.seekInData(src, 0);
+    await meta.seekInContent(src, 0);
     final match2 = await meta.getDirectChildByTypes(src, {'iinf'});
     final dict2 = match2!.toDict();
 

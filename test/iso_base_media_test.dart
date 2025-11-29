@@ -1093,32 +1093,25 @@ void main() {
   test('Extract data', () async {
     final src = await loadFileSrc('a.heic');
     final fileBox = ISOBox.createRootBox();
-    var s = '';
-    await inspectISOBox(src, fileBox, callback: (box, depth) async {
-      if (box.type == 'ispe') {
-        final data = await box.extractData(src);
-        s += '${data.toHex()}|';
-      }
-      return true;
-    });
-    expect(s, '000005a0000003c0|000000f0000000a0|');
+    final pitm = await fileBox.getChildByTypePath(src, ['meta', 'pitm']);
+    await src.seek(3);
+    final bytes = await pitm!.extractData(src);
+    expect(bytes.toHex(), '03ea');
+    // Should not change position.
+    expect(await src.position(), 3);
     await src.close();
   });
 
   test('toBytes', () async {
     final src = await loadFileSrc('a.heic');
     final fileBox = ISOBox.createRootBox();
-    // Get all direct children.
-    final children = await fileBox.getDirectChildren(src);
-    final bb = BytesBuilder();
-    for (final child in children) {
-      bb.add(await child.toBytes(src));
-    }
-
-    final src2 = await loadFileSrc('a.heic');
-    expect(bb.toBytes(), await src2.readToEnd());
+    final pitm = await fileBox.getChildByTypePath(src, ['meta', 'pitm']);
+    await src.seek(3);
+    final bytes = await pitm!.toBytes(src);
+    expect(bytes.toHex(), '0000000e7069746d0000000003ea');
+    // Should not change position.
+    expect(await src.position(), 3);
     await src.close();
-    await src2.close();
   });
 
   test('Can be sent to Isolates', () async {
