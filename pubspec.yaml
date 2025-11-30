@@ -1,6 +1,6 @@
 name: iso_base_media
-description: A dart package to parse ISO Base Media File Format (e.g. MP4, HEIC, AVIF, JXL files).
-version: 6.2.0
+description: A dart package to parse ISO Base Media File Format.
+version: 6.3.0
 repository: https://github.com/mgenware/iso_base_media
 
 environment:

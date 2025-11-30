@@ -5,19 +5,11 @@ import 'package:random_access_source/random_access_source.dart';
 
 import 'uint8list_extension.dart';
 
-bool _checkIsContainerBox(
-    String type, bool Function(String type)? isContainerCallback) {
-  return isContainerCallback != null
-      ? isContainerCallback(type)
-      : _containerBoxes.contains(type);
-}
-
 final bool _isJS = identical(1, 1.0);
 
 Future<ISOBox?> _readChildBox(
   RandomAccessSource src,
   ISOBox parent,
-  bool Function(String type)? isContainerCallback,
   bool Function(String type)? isFullBoxCallback,
 ) async {
   final headerOffset = await src.position();
@@ -63,7 +55,6 @@ Future<ISOBox?> _readChildBox(
   final fullBox = isFullBoxCallback != null
       ? isFullBoxCallback(type)
       : _fullBoxes.contains(type);
-  final isContainer = _checkIsContainerBox(type, isContainerCallback);
 
   int? fullBoxInt32;
   if (fullBox) {
@@ -72,8 +63,8 @@ Future<ISOBox?> _readChildBox(
   }
 
   final dataOffset = await src.position();
-  final box = ISOBox(false, boxSize, type, isContainer, headerOffset,
-      dataOffset, fullBoxInt32);
+  final box =
+      ISOBox(false, boxSize, type, headerOffset, dataOffset, fullBoxInt32);
 
   await src.seek(dataOffset + box.dataSize);
   return box;
@@ -115,9 +106,6 @@ class ISOBox {
   /// The type of the box.
   final String type;
 
-  /// Whether the box is a container.
-  final bool isContainer;
-
   /// The full box data.
   final int? fullBoxInt32;
 
@@ -142,7 +130,6 @@ class ISOBox {
     this.isRootFileBox,
     this.boxSize,
     this.type,
-    this.isContainer,
     this.headerOffset,
     this.dataOffset,
     this.fullBoxInt32,
@@ -152,32 +139,26 @@ class ISOBox {
 
   /// Creates a root [ISOBox].
   static ISOBox createRootBox() {
-    return ISOBox(true, 0, '', true, 0, 0, null);
+    return ISOBox(true, 0, '', 0, 0, null);
   }
 
   /// Returns the next child box. If this box is not a container, returns null.
   /// [src] is the source to read from.
-  /// [isContainerCallback] is a callback to determine if a box is a container.
   /// [isFullBoxCallback] is a callback to determine if a box is a full box.
   /// [index] is an optional index to set on the returned box.
   /// [skipOffset] is an optional offset to skip before reading the next child box.
   Future<ISOBox?> nextChild(
     RandomAccessSource src, {
-    bool Function(String type)? isContainerCallback,
     bool Function(String type)? isFullBoxCallback,
     int? index,
     int skipOffset = 0,
   }) async {
-    if (!isContainer) {
-      return null;
-    }
     // Return null if the box is fully read.
     if (!isRootFileBox && _currentOffset - dataOffset >= dataSize) {
       return null;
     }
     await src.seek(_currentOffset + skipOffset);
-    final box =
-        await _readChildBox(src, this, isContainerCallback, isFullBoxCallback);
+    final box = await _readChildBox(src, this, isFullBoxCallback);
     _currentOffset = await src.position();
     if (box != null && index != null) {
       box._index = index;
@@ -259,23 +240,6 @@ class ISOBox {
     return ISOFullBoxInfo(version, flags);
   }
 }
-
-const _containerBoxes = {
-  'moov',
-  'trak',
-  'mdia',
-  'minf',
-  'stbl',
-  'dinf',
-  'edts',
-  'udta',
-  'mvex',
-  'meta',
-  'iref',
-  'iprp',
-  'ipco',
-  'grpl',
-};
 
 const _fullBoxes = {
   'pdin',

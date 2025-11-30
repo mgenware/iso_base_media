@@ -20,6 +20,12 @@ Future<Map<String, dynamic>?> _inspectISOBox(
   required bool Function(String type)? isFullBoxCallback,
   required FutureOr<bool> Function(ISOBox box, int depth)? callback,
 }) async {
+  bool checkIsContainer(ISOBox box) {
+    return isContainerCallback != null
+        ? isContainerCallback(box.type)
+        : _containerBoxes.contains(box.type);
+  }
+
   Map<String, dynamic>? dict;
   if (callback == null) {
     dict = !box.isRootFileBox ? box.toDict() : <String, dynamic>{'root': true};
@@ -29,7 +35,7 @@ Future<Map<String, dynamic>?> _inspectISOBox(
     if (callback != null) {
       shouldContinue = await callback(box, depth);
     }
-    if (!box.isContainer) {
+    if (!checkIsContainer(box)) {
       return dict;
     }
   }
@@ -39,9 +45,7 @@ Future<Map<String, dynamic>?> _inspectISOBox(
   ISOBox? child;
   final childDicts = <Map<String, dynamic>>[];
   do {
-    child = await box.nextChild(src,
-        isContainerCallback: isContainerCallback,
-        isFullBoxCallback: isFullBoxCallback);
+    child = await box.nextChild(src, isFullBoxCallback: isFullBoxCallback);
     if (child != null) {
       final childInspection = await _inspectISOBox(src, child, depth + 1,
           callback: callback,
@@ -79,3 +83,20 @@ Future<Map<String, dynamic>?> inspectISOBox(
     callback: callback,
   );
 }
+
+const _containerBoxes = {
+  'moov',
+  'trak',
+  'mdia',
+  'minf',
+  'stbl',
+  'dinf',
+  'edts',
+  'udta',
+  'mvex',
+  'meta',
+  'iref',
+  'iprp',
+  'ipco',
+  'grpl',
+};

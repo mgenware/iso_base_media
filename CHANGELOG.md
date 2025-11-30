@@ -1,3 +1,7 @@
+## 6.3.0
+
+- Remove `isContainerCallback`.
+
 ## 6.2.0
 
 - Add `skipOffset` to `ISOBox.nextChild` to skip bytes before reading the next child box.

@@ -3,7 +3,7 @@
 [![pub package](https://img.shields.io/pub/v/iso_base_media.svg)](https://pub.dev/packages/iso_base_media)
 [![Build Status](https://github.com/mgenware/iso_base_media/workflows/Dart/badge.svg)](https://github.com/mgenware/iso_base_media/actions)
 
-A dart package to parse ISO Base Media File Format (e.g. MP4, HEIC, AVIF, JXL files).
+A dart package to parse ISO Base Media File Format.
 
 ## Usage
 
@@ -33,24 +33,4 @@ Future<void> main() async {
    */
 }
 
-```
-
-### Determine which boxes are containers or full boxes
-
-This package comes with a default set of rules to determine if a box is a container or a full box. You can provide your own rules via `isContainerCallback` and `isFullBoxCallback`.
-
-```dart
-await fileBox.getChildByTypePath(src, ['meta', 'iprp', 'ipco'], isContainerCallback: (type) {
-  // Only `meta` box is considered a container.
-  if (type == 'meta') {
-    return true;
-  }
-  return false;
-}, isFullBoxCallback: (type) {
-  // Only `mvhd` box is considered a full box.
-  if (type == 'mvhd') {
-    return true;
-  }
-  return false;
-});
 ```
