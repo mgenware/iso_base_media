@@ -288,4 +288,20 @@ void main() {
     await src.close();
     await newSrc.close();
   });
+
+  test('getDirectChild', () async {
+    final root = ISOBox.createRootBox();
+    final src = await loadFileSrc('a.heic');
+    final match =
+        await root.getDirectChild(src, filter: (box) => box.type == 'ftyp');
+    expect(match!.toDict(), {
+      'boxSize': 24,
+      'dataSize': 16,
+      'type': 'ftyp',
+      'headerOffset': 0,
+      'dataOffset': 8,
+      'index': 0
+    });
+    await src.close();
+  });
 }

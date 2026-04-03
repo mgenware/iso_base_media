@@ -1,3 +1,7 @@
+## 6.3.1
+
+- Add `getDirectChild` util.
+
 ## 6.3.0
 
 - Remove `isContainerCallback`.

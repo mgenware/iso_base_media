@@ -5,7 +5,7 @@ import 'package:random_access_source/random_access_source.dart';
 import '../iso_base_media.dart';
 
 extension ISOBoxExtension on ISOBox {
-  /// Return a list of direct children boxes.
+  /// Return a list of direct children boxes by a given filter.
   /// [isFullBoxCallback] is a callback to determine if a box is a full box.
   /// [filter] is a callback to filter boxes.
   Future<List<ISOBox>> getDirectChildren(
@@ -27,6 +27,29 @@ extension ISOBoxExtension on ISOBox {
       }
     } while (child != null);
     return children;
+  }
+
+  /// Return a direct child box by a given async filter.
+  /// [isFullBoxCallback] is a callback to determine if a box is a full box.
+  /// [filter] is a callback to filter boxes.
+  Future<ISOBox?> getDirectChild(
+    RandomAccessSource src, {
+    bool Function(String type)? isFullBoxCallback,
+    bool Function(ISOBox box)? filter,
+  }) async {
+    ISOBox? child;
+    var i = 0;
+    do {
+      child = await nextChild(
+        src,
+        isFullBoxCallback: isFullBoxCallback,
+        index: i++,
+      );
+      if (child != null && (filter == null || filter(child))) {
+        return child;
+      }
+    } while (child != null);
+    return null;
   }
 
   /// Return a list of direct children boxes by a given async filter.
