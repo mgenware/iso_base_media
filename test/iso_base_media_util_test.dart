@@ -304,4 +304,21 @@ void main() {
     });
     await src.close();
   });
+
+  test('getDirectChildByAsyncFilter', () async {
+    final root = ISOBox.createRootBox();
+    final src = await loadFileSrc('a.heic');
+    final match = await root.getDirectChildByAsyncFilter(src, (box) async {
+      return box.type == 'ftyp';
+    });
+    expect(match!.toDict(), {
+      'boxSize': 24,
+      'dataSize': 16,
+      'type': 'ftyp',
+      'headerOffset': 0,
+      'dataOffset': 8,
+      'index': 0
+    });
+    await src.close();
+  });
 }

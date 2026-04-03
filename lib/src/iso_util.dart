@@ -6,8 +6,8 @@ import '../iso_base_media.dart';
 
 extension ISOBoxExtension on ISOBox {
   /// Return a list of direct children boxes by a given filter.
-  /// [isFullBoxCallback] is a callback to determine if a box is a full box.
   /// [filter] is a callback to filter boxes.
+  /// [isFullBoxCallback] is a callback to determine if a box is a full box.
   Future<List<ISOBox>> getDirectChildren(
     RandomAccessSource src, {
     bool Function(String type)? isFullBoxCallback,
@@ -30,8 +30,8 @@ extension ISOBoxExtension on ISOBox {
   }
 
   /// Return a direct child box by a given async filter.
-  /// [isFullBoxCallback] is a callback to determine if a box is a full box.
   /// [filter] is a callback to filter boxes.
+  /// [isFullBoxCallback] is a callback to determine if a box is a full box.
   Future<ISOBox?> getDirectChild(
     RandomAccessSource src, {
     bool Function(String type)? isFullBoxCallback,
@@ -73,6 +73,29 @@ extension ISOBoxExtension on ISOBox {
       }
     } while (child != null);
     return children;
+  }
+
+  /// Return a direct child box by a given async filter.
+  /// [filter] is a callback to filter boxes.
+  /// [isFullBoxCallback] is a callback to determine if a box is a full box.
+  Future<ISOBox?> getDirectChildByAsyncFilter(
+    RandomAccessSource src,
+    Future<bool> Function(ISOBox box) filter, {
+    bool Function(String type)? isFullBoxCallback,
+  }) async {
+    ISOBox? child;
+    var i = 0;
+    do {
+      child = await nextChild(
+        src,
+        isFullBoxCallback: isFullBoxCallback,
+        index: i++,
+      );
+      if (child != null && (await filter(child))) {
+        return child;
+      }
+    } while (child != null);
+    return null;
   }
 
   /// Returns a direct child box by given types.
