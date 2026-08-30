@@ -24,7 +24,7 @@ Future<ISOBox?> _readChildBox(
   }
   var boxSize = sizeBuffer.asByteData().getUint32(0);
   // Read box type immediately after size.
-  final typeBuffer = await src.mustRead(4);
+  final typeBuffer = await src.mustRead(4, errorTag: 'Reading box type');
   final type = String.fromCharCodes(typeBuffer);
 
   /**
@@ -37,7 +37,8 @@ Future<ISOBox?> _readChildBox(
     of the file.
   */
   if (boxSize == 1) {
-    final largeSizeBuffer = await src.mustRead(8);
+    final largeSizeBuffer =
+        await src.mustRead(8, errorTag: 'Reading large box size');
     // NOTE: JavaScript only supports doubles. JavaScript integers are actually
     // doubles in the range of -2^53 to 2^53. 64-bit integers are not supported
     // in JavaScript.
@@ -58,7 +59,8 @@ Future<ISOBox?> _readChildBox(
 
   int? fullBoxInt32;
   if (fullBox) {
-    final fullBoxInt32Buffer = await src.mustRead(4);
+    final fullBoxInt32Buffer =
+        await src.mustRead(4, errorTag: 'Reading full box int32');
     fullBoxInt32 = fullBoxInt32Buffer.asByteData().getUint32(0);
   }
 
