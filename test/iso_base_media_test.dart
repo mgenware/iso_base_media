@@ -28,6 +28,48 @@ Future<void> _testFile(String fileName, Map<String, dynamic> expected,
 }
 
 void main() {
+  test('extended-size box header', () async {
+    final src = BytesRASource(Uint8List.fromList([
+      0,
+      0,
+      0,
+      1,
+      0x6c,
+      0x61,
+      0x72,
+      0x67,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      17,
+      0x42,
+      0,
+      0,
+      0,
+      8,
+      0x6e,
+      0x65,
+      0x78,
+      0x74,
+    ]));
+    final root = ISOBox.createRootBox();
+
+    final extendedBox = await root.nextChild(src);
+    expect(extendedBox!.headerSize, 16);
+    expect(extendedBox.dataSize, 1);
+    expect(await extendedBox.extractData(src), [0x42]);
+
+    final nextBox = await root.nextChild(src);
+    expect(nextBox!.type, 'next');
+    expect(nextBox.headerOffset, 17);
+
+    await src.close();
+  }, skip: _isJS);
+
   test('MP4', () async {
     await _testFile('a.mp4', {
       'root': true,
@@ -1196,7 +1238,7 @@ void main() {
     expect(list, [
       {
         'boxSize': 116,
-        'dataSize': 108,
+        'dataSize': 100,
         'type': 'test',
         'headerOffset': 0,
         'dataOffset': 16,

@@ -96,11 +96,7 @@ class ISOBox {
   /// The size of the box.
   final int boxSize;
 
-  int get headerSize =>
-      // 8 bytes for header size.
-      8 +
-      // 4 bytes for full box data.
-      (fullBoxInt32 != null ? 4 : 0);
+  int get headerSize => dataOffset - headerOffset;
 
   /// The size of the data in the box.
   int get dataSize => boxSize - headerSize;

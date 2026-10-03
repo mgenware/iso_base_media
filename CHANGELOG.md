@@ -1,3 +1,7 @@
+## 6.3.4
+
+- Fix header size issue on extended-size box.
+
 ## 6.3.1
 
 - Add `getDirectChild` util.
