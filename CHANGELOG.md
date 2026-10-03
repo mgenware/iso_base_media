@@ -1,3 +1,7 @@
+## 6.4.0
+
+- Update to `random_access_source` 5.0.0.
+
 ## 6.3.4
 
 - Fix header size issue on extended-size box.
