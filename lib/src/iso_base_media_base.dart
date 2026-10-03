@@ -68,7 +68,9 @@ Future<ISOBox?> _readChildBox(
   final box =
       ISOBox(false, boxSize, type, headerOffset, dataOffset, fullBoxInt32);
 
-  await src.seek(dataOffset + box.dataSize);
+  if (!await src.trySeek(dataOffset + box.dataSize)) {
+    return null;
+  }
   return box;
 }
 
@@ -155,9 +157,12 @@ class ISOBox {
     if (!isRootFileBox && _currentOffset - dataOffset >= dataSize) {
       return null;
     }
-    await src.seek(_currentOffset + skipOffset);
+    if (!await src.trySeek(_currentOffset + skipOffset)) {
+      _currentOffset = await src.length();
+      return null;
+    }
     final box = await _readChildBox(src, this, isFullBoxCallback);
-    _currentOffset = await src.position();
+    _currentOffset = box == null ? await src.length() : await src.position();
     if (box != null && index != null) {
       box._index = index;
     }
@@ -167,8 +172,9 @@ class ISOBox {
   /// Sets the internal file position to the specified offset within the content of the box.
   Future<void> seekInContent(RandomAccessSource src, int offset) async {
     offset = dataOffset + offset;
-    await src.seek(offset);
-    _currentOffset = offset;
+    if (await src.trySeek(offset)) {
+      _currentOffset = offset;
+    }
   }
 
   /// This calls [seekInContent] with an offset of 0, effectively resetting the position to the start of the box data.
@@ -183,9 +189,9 @@ class ISOBox {
     RandomAccessSource src,
   ) async {
     final poz = await src.position();
-    await src.seek(headerOffset);
+    await src.mustSeek(headerOffset);
     final boxBytes = await src.read(boxSize);
-    await src.seek(poz);
+    await src.mustSeek(poz);
     return boxBytes;
   }
 
@@ -222,9 +228,9 @@ class ISOBox {
     RandomAccessSource src,
   ) async {
     final poz = await src.position();
-    await src.seek(dataOffset);
+    await src.mustSeek(dataOffset);
     final data = await src.read(dataSize);
-    await src.seek(poz);
+    await src.mustSeek(poz);
     return data;
   }
 

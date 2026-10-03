@@ -1136,7 +1136,7 @@ void main() {
     final src = await loadFileSrc('a.heic');
     final fileBox = ISOBox.createRootBox();
     final pitm = await fileBox.getChildByTypePath(src, ['meta', 'pitm']);
-    await src.seek(3);
+    await src.mustSeek(3);
     final bytes = await pitm!.extractData(src);
     expect(bytes.toHex(), '03ea');
     // Should not change position.
@@ -1148,7 +1148,7 @@ void main() {
     final src = await loadFileSrc('a.heic');
     final fileBox = ISOBox.createRootBox();
     final pitm = await fileBox.getChildByTypePath(src, ['meta', 'pitm']);
-    await src.seek(3);
+    await src.mustSeek(3);
     final bytes = await pitm!.toBytes(src);
     expect(bytes.toHex(), '0000000e7069746d0000000003ea');
     // Should not change position.
